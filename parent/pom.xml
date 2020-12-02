@@ -5,12 +5,13 @@
   <modelVersion>4.0.0</modelVersion>
   
   <properties>
-    <project.version>1.0</project.version>
+    <revision>1.0</revision>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
   
   <groupId>org.jc</groupId>
   <artifactId>parent</artifactId>
-  <version>${project.version}</version>
+  <version>${revision}</version>
   <packaging>pom</packaging>
   
   <build>

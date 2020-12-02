@@ -7,7 +7,7 @@
   <parent>
     <groupId>org.jc</groupId>
     <artifactId>parent</artifactId>
-    <version>${project.version}</version>
+    <version>${revision}</version>
     <relativePath>parent</relativePath>
   </parent>
   
@@ -53,8 +53,8 @@
             <configuration>
               <artifactItems>
                 <artifactItem>
-                  <groupId>${groupId}</groupId>
-                  <artifactId>${artifactId}</artifactId>
+                  <groupId>${project.groupId}</groupId>
+                  <artifactId>${project.artifactId}</artifactId>
                   <version>${project.version}</version>
                   <type>tar.gz</type>
                   <outputDirectory>target</outputDirectory>
@@ -76,14 +76,15 @@
               <goal>exec</goal>
             </goals>
             <configuration>
-              <workingDirectory>target/${artifactId}-${project.version}</workingDirectory>
+              <workingDirectory>target/${project.artifactId}-${project.version}</workingDirectory>
               <executable>sh</executable>
               <arguments>
                 <argument>-c</argument>
                 <argument>
                   sed -i '1 i #!/usr/lib/jvm/java-11/bin/java -jar' 'tool-${project.version}.jar'\
                   &amp;&amp;\
-                  chmod u+x 'tool-${project.version}.jar'
+                  chmod +x 'tool-${project.version}.jar'\
+                  ;
                 </argument>
               </arguments>
             </configuration>

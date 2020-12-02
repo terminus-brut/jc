@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2020 Red Hat, Inc.
+ * Copyright (c) 2020 Marián Konček
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@ package org.jc;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -31,6 +33,8 @@ public class Tool
 		@Parameter(names = {"-h", "--help"}, help = true, description =
 				"Display help.")
 		boolean help = false;
+		@Parameter(names = {"-i", "--inputs"})
+		List<String> inputs = new ArrayList<>();
 	}
 	
 	public static void main(String[] args) throws IOException
@@ -45,12 +49,13 @@ public class Tool
 			return;
 		}
 		
-		var lol = new Compiler();
-		var file = new In_memory_java_source_file_object(Paths.get("/home/mkoncek/Desktop/Hello.java"));
+		var compiler = new Compiler();
 		
-		System.out.println(file.getName());
+		for (final var arg : arguments.inputs)
+		{
+			compiler.add(new In_memory_java_source_file_object(Paths.get(arg)));
+		}
 		
-		lol.add(file);
-		lol.compile();
+		compiler.compile();
 	}
 }
