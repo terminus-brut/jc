@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 /**
  * @author Marián Konček
  */
-public class Debug_printer
+public class DebugPrinter
 {
 	public static String to_string(String name, Object... args)
 	{

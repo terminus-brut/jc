@@ -24,14 +24,14 @@ import java.util.stream.Stream;
 /**
  * @author Marián Konček
  */
-public class Delegating_class_loader extends ClassLoader
+public class DelegatingClassLoader extends ClassLoader
 {
 	public ClassLoader delegate;
 	
-	public Delegating_class_loader(ClassLoader delegate, String name)
+	public DelegatingClassLoader(ClassLoader delegate)
 	{
-		super();
-		System.err.println("\t\t###" + name);
+		super("Delegating_" + delegate.getName(), delegate);
+		System.err.println("\t\t###");
 		System.err.println(delegate);
 		this.delegate = delegate;
 		System.err.println(this.delegate);
@@ -56,73 +56,65 @@ public class Delegating_class_loader extends ClassLoader
 	}
 	
 	@Override
-	public String getName()
-	{
-		System.err.println(Debug_printer.to_string("getName"));
-		System.err.println(delegate);
-		return delegate.getName();
-	}
-	
-	@Override
 	public Class<?> loadClass(String name) throws ClassNotFoundException
 	{
-		System.err.println(Debug_printer.to_string("loadClass", name));
+		System.err.println(DebugPrinter.to_string("DelegatingClassLoader::loadClass", name));
 		return delegate.loadClass(name);
 	}
 	
 	@Override
 	public URL getResource(String name)
 	{
-		System.err.println(Debug_printer.to_string("getResource", name));
+		System.err.println(DebugPrinter.to_string("DelegatingClassLoader::getResource", name));
 		return delegate.getResource(name);
 	}
 	
 	@Override
 	public Enumeration<URL> getResources(String name) throws IOException
 	{
-		System.err.println(Debug_printer.to_string("getResources", name));
+		System.err.println(DebugPrinter.to_string("DelegatingClassLoader::getResources", name));
 		return delegate.getResources(name);
 	}
 	
 	@Override
 	public Stream<URL> resources(String name)
 	{
-		System.err.println(Debug_printer.to_string("resources", name));
+		System.err.println(DebugPrinter.to_string("DelegatingClassLoader::resources", name));
 		return delegate.resources(name);
 	}
 	
 	@Override
 	public InputStream getResourceAsStream(String name)
 	{
-		System.err.println(Debug_printer.to_string("getResourceAsStream", name));
+		System.err.println(DebugPrinter.to_string("DelegatingClassLoader::getResourceAsStream", name));
 		return delegate.getResourceAsStream(name);
 	}
 	
 	@Override
 	public void setDefaultAssertionStatus(boolean enabled)
 	{
-		System.err.println(Debug_printer.to_string("setDefaultAssertionStatus", enabled));
+		System.err.println(DebugPrinter.to_string("DelegatingClassLoader::setDefaultAssertionStatus", enabled));
 		delegate.setDefaultAssertionStatus(enabled);
 	}
 	
 	@Override
 	public void setPackageAssertionStatus(String packageName, boolean enabled)
 	{
-		System.err.println(Debug_printer.to_string("setPackageAssertionStatus", packageName, enabled));
+		System.err.println(DebugPrinter.to_string("DelegatingClassLoader::setPackageAssertionStatus", packageName, enabled));
 		delegate.setPackageAssertionStatus(packageName, enabled);
 	}
 	
 	@Override
 	public void setClassAssertionStatus(String className, boolean enabled)
 	{
-		System.err.println(Debug_printer.to_string("setClassAssertionStatus", className, enabled));
+		System.err.println(DebugPrinter.to_string("DelegatingClassLoader::setClassAssertionStatus", className, enabled));
 		delegate.setClassAssertionStatus(className, enabled);
 	}
 	
 	@Override
 	public void clearAssertionStatus()
 	{
-		System.err.println(Debug_printer.to_string("clearAssertionStatus"));
+		System.err.println(DebugPrinter.to_string("DelegatingClassLoader::clearAssertionStatus"));
 		delegate.clearAssertionStatus();
 	}
 }

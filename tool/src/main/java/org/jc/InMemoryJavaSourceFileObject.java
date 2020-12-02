@@ -28,22 +28,22 @@ import org.apache.commons.io.IOUtils;
 /**
  * @author Marián Konček
  */
-public class In_memory_java_source_file_object extends SimpleJavaFileObject
+public class InMemoryJavaSourceFileObject extends SimpleJavaFileObject
 {
 	String source;
 	
-	In_memory_java_source_file_object(String name, String source)
+	InMemoryJavaSourceFileObject(String name, String source)
 	{
 		super(URI.create("string:///" + name), Kind.SOURCE);
 		this.source = source;
 	}
 	
-	In_memory_java_source_file_object(String name, InputStream is) throws IOException
+	InMemoryJavaSourceFileObject(String name, InputStream is) throws IOException
 	{
 		this(name, IOUtils.toString(is, (String) null));
 	}
 	
-	In_memory_java_source_file_object(Path path) throws IOException
+	InMemoryJavaSourceFileObject(Path path) throws IOException
 	{
 		this(path.getFileName().toString(), new FileInputStream(path.toFile()));
 	}
@@ -51,7 +51,7 @@ public class In_memory_java_source_file_object extends SimpleJavaFileObject
 	@Override
 	public CharSequence getCharContent(boolean arg0) throws IOException
 	{
-		System.err.println(Debug_printer.to_string("getCharContent", arg0));
+		System.err.println(DebugPrinter.to_string("InMemoryJavaSourceFileObject::getCharContent", arg0));
 		return source;
 	}
 }

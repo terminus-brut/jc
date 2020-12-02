@@ -27,7 +27,7 @@ import javax.tools.SimpleJavaFileObject;
 /**
  * @author Marián Konček
  */
-public class In_memory_java_class_file_object extends SimpleJavaFileObject
+public class InMemoryJavaClassFileObject extends SimpleJavaFileObject
 {
 	class Bytes extends ByteArrayOutputStream
 	{
@@ -39,7 +39,7 @@ public class In_memory_java_class_file_object extends SimpleJavaFileObject
 	
 	Bytes bytes = new Bytes();
 	
-	public In_memory_java_class_file_object(String name)
+	public InMemoryJavaClassFileObject(String name)
 	{
 		super(URI.create("class:///" + name), Kind.CLASS);
 	}
@@ -52,7 +52,7 @@ public class In_memory_java_class_file_object extends SimpleJavaFileObject
 	@Override
 	public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException
 	{
-		System.err.println(Debug_printer.to_string("getCharContent", ignoreEncodingErrors));
+		System.err.println(DebugPrinter.to_string("InMemoryJavaClassFileObject::getCharContent", ignoreEncodingErrors));
 		
 		return bytes.toString();
 	}
@@ -60,7 +60,7 @@ public class In_memory_java_class_file_object extends SimpleJavaFileObject
 	@Override
 	public OutputStream openOutputStream() throws IOException
 	{
-		System.err.println(Debug_printer.to_string("openOutputStream"));
+		System.err.println(DebugPrinter.to_string("InMemoryJavaClassFileObject::openOutputStream"));
 		
 		return bytes;
 	}
@@ -68,7 +68,7 @@ public class In_memory_java_class_file_object extends SimpleJavaFileObject
 	@Override
 	public Writer openWriter() throws IOException
 	{
-		System.err.println(Debug_printer.to_string("openWriter"));
+		System.err.println(DebugPrinter.to_string("InMemoryJavaClassFileObject::openWriter"));
 		
 		return new OutputStreamWriter(openOutputStream());
 	}

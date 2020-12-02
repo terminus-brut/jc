@@ -28,7 +28,7 @@ import javax.tools.ToolProvider;
 public class Compiler
 {
 	final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-	final In_memory_file_manager file_manager = new In_memory_file_manager(compiler.getStandardFileManager(null, null, null));
+	final InMemoryFileManager file_manager = new InMemoryFileManager(compiler.getStandardFileManager(null, null, null));
 	final DiagnosticListener<JavaFileObject> diagnostics = new DiagnosticListener<>()
 	{
 		@Override

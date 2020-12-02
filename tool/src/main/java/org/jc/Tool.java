@@ -53,7 +53,7 @@ public class Tool
 		
 		for (final var arg : arguments.inputs)
 		{
-			compiler.add(new In_memory_java_source_file_object(Paths.get(arg)));
+			compiler.add(new InMemoryJavaSourceFileObject(Paths.get(arg)));
 		}
 		
 		compiler.compile();
