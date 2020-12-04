@@ -21,12 +21,10 @@ import java.util.stream.Collectors;
 /**
  * @author Marián Konček
  */
-public class DebugPrinter
-{
-	public static String to_string(String name, Object... args)
-	{
-		return name + "(" + Arrays.<Object> asList(args).stream()
-				.map(o -> o == null ? "<null>" : o.toString())
-				.collect(Collectors.joining(", ")) + ")";
-	}
+public class DebugPrinter {
+    public static String to_string(String name, Object... args) {
+        return name + "(" + Arrays.<Object>asList(args).stream()
+                .map(o -> o == null ? "<null>" : o.toString())
+                .collect(Collectors.joining(", ")) + ")";
+    }
 }

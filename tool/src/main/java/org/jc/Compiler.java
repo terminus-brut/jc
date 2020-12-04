@@ -25,52 +25,44 @@ import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.ToolProvider;
 
-public class Compiler
-{
-	final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-	final InMemoryFileManager file_manager = new InMemoryFileManager(compiler.getStandardFileManager(null, null, null));
-	final DiagnosticListener<JavaFileObject> diagnostics = new DiagnosticListener<>()
-	{
-		@Override
-		public void report(Diagnostic<? extends JavaFileObject> diagnostic)
-		{
-			System.err.println("DiagnosticListener reporting: " + diagnostic.getMessage(null));
-		}
-	};
-	
-	final List<JavaFileObject> compilation_units = new ArrayList<>();
-	
-	Compiler() throws IOException
-	{
+public class Compiler {
+    final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+    final InMemoryFileManager file_manager = new InMemoryFileManager(compiler.getStandardFileManager(null, null, null));
+    final DiagnosticListener<JavaFileObject> diagnostics = new DiagnosticListener<>() {
+        @Override
+        public void report(Diagnostic<? extends JavaFileObject> diagnostic) {
+            System.err.println("DiagnosticListener reporting: " + diagnostic.getMessage(null));
+        }
+    };
+
+    final List<JavaFileObject> compilation_units = new ArrayList<>();
+
+    Compiler() throws IOException {
 		/*
 		System.out.println(tempdir.toString());
 		file_manager.setLocation(StandardLocation.CLASS_OUTPUT,
 				Arrays.asList(tempdir.toFile()));
 				*/
-	}
-	
-	void add(JavaFileObject object)
-	{
-		compilation_units.add(object);
-	}
-	
-	public void compile() throws IOException
-	{
-		if (! compiler.getTask(
-				null,
-				file_manager,
-				diagnostics,
-				null,
-				null,
-				compilation_units)
-				.call())
-		{
-			throw new RuntimeException("Could not compile file");
-		}
-		
-		for (final var class_out : file_manager.class_outputs())
-		{
-			System.out.println(class_out.byte_array());
-		}
-	}
+    }
+
+    void add(JavaFileObject object) {
+        compilation_units.add(object);
+    }
+
+    public void compile() throws IOException {
+        if (!compiler.getTask(
+                null,
+                file_manager,
+                diagnostics,
+                null,
+                null,
+                compilation_units)
+                .call()) {
+            throw new RuntimeException("Could not compile file");
+        }
+
+        for (final var class_out : file_manager.class_outputs()) {
+            System.out.println(class_out.byte_array());
+        }
+    }
 }

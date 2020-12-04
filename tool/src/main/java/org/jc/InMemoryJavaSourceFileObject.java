@@ -28,30 +28,25 @@ import org.apache.commons.io.IOUtils;
 /**
  * @author Marián Konček
  */
-public class InMemoryJavaSourceFileObject extends SimpleJavaFileObject
-{
-	String source;
-	
-	InMemoryJavaSourceFileObject(String name, String source)
-	{
-		super(URI.create("string:///" + name), Kind.SOURCE);
-		this.source = source;
-	}
-	
-	InMemoryJavaSourceFileObject(String name, InputStream is) throws IOException
-	{
-		this(name, IOUtils.toString(is, (String) null));
-	}
-	
-	InMemoryJavaSourceFileObject(Path path) throws IOException
-	{
-		this(path.getFileName().toString(), new FileInputStream(path.toFile()));
-	}
-	
-	@Override
-	public CharSequence getCharContent(boolean arg0) throws IOException
-	{
-		System.err.println(DebugPrinter.to_string("InMemoryJavaSourceFileObject::getCharContent", arg0));
-		return source;
-	}
+public class InMemoryJavaSourceFileObject extends SimpleJavaFileObject {
+    String source;
+
+    InMemoryJavaSourceFileObject(String name, String source) {
+        super(URI.create("string:///" + name), Kind.SOURCE);
+        this.source = source;
+    }
+
+    InMemoryJavaSourceFileObject(String name, InputStream is) throws IOException {
+        this(name, IOUtils.toString(is, (String) null));
+    }
+
+    InMemoryJavaSourceFileObject(Path path) throws IOException {
+        this(path.getFileName().toString(), new FileInputStream(path.toFile()));
+    }
+
+    @Override
+    public CharSequence getCharContent(boolean arg0) throws IOException {
+        System.err.println(DebugPrinter.to_string("InMemoryJavaSourceFileObject::getCharContent", arg0));
+        return source;
+    }
 }

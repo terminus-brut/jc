@@ -27,49 +27,41 @@ import javax.tools.SimpleJavaFileObject;
 /**
  * @author Marián Konček
  */
-public class InMemoryJavaClassFileObject extends SimpleJavaFileObject
-{
-	class Bytes extends ByteArrayOutputStream
-	{
-		public byte[] buf()
-		{
-			return this.buf;
-		}
-	}
-	
-	Bytes bytes = new Bytes();
-	
-	public InMemoryJavaClassFileObject(String name)
-	{
-		super(URI.create("class:///" + name), Kind.CLASS);
-	}
-	
-	public byte[] byte_array()
-	{
-		return bytes.buf();
-	}
-	
-	@Override
-	public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException
-	{
-		System.err.println(DebugPrinter.to_string("InMemoryJavaClassFileObject::getCharContent", ignoreEncodingErrors));
-		
-		return bytes.toString();
-	}
-	
-	@Override
-	public OutputStream openOutputStream() throws IOException
-	{
-		System.err.println(DebugPrinter.to_string("InMemoryJavaClassFileObject::openOutputStream"));
-		
-		return bytes;
-	}
-	
-	@Override
-	public Writer openWriter() throws IOException
-	{
-		System.err.println(DebugPrinter.to_string("InMemoryJavaClassFileObject::openWriter"));
-		
-		return new OutputStreamWriter(openOutputStream());
-	}
+public class InMemoryJavaClassFileObject extends SimpleJavaFileObject {
+    class Bytes extends ByteArrayOutputStream {
+        public byte[] buf() {
+            return this.buf;
+        }
+    }
+
+    Bytes bytes = new Bytes();
+
+    public InMemoryJavaClassFileObject(String name) {
+        super(URI.create("class:///" + name), Kind.CLASS);
+    }
+
+    public byte[] byte_array() {
+        return bytes.buf();
+    }
+
+    @Override
+    public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException {
+        System.err.println(DebugPrinter.to_string("InMemoryJavaClassFileObject::getCharContent", ignoreEncodingErrors));
+
+        return bytes.toString();
+    }
+
+    @Override
+    public OutputStream openOutputStream() throws IOException {
+        System.err.println(DebugPrinter.to_string("InMemoryJavaClassFileObject::openOutputStream"));
+
+        return bytes;
+    }
+
+    @Override
+    public Writer openWriter() throws IOException {
+        System.err.println(DebugPrinter.to_string("InMemoryJavaClassFileObject::openWriter"));
+
+        return new OutputStreamWriter(openOutputStream());
+    }
 }
