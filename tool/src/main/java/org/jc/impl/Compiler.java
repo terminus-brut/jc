@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jc;
+package org.jc.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -37,7 +37,7 @@ public class Compiler {
 
     final List<JavaFileObject> compilation_units = new ArrayList<>();
 
-    Compiler() throws IOException {
+    public Compiler() throws IOException {
 		/*
 		System.out.println(tempdir.toString());
 		file_manager.setLocation(StandardLocation.CLASS_OUTPUT,
@@ -45,7 +45,7 @@ public class Compiler {
 				*/
     }
 
-    void add(JavaFileObject object) {
+    public void add(JavaFileObject object) {
         compilation_units.add(object);
     }
 

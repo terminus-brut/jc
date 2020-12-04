@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jc;
+package org.jc.impl;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -40,7 +40,7 @@ public class InMemoryJavaSourceFileObject extends SimpleJavaFileObject {
         this(name, IOUtils.toString(is, (String) null));
     }
 
-    InMemoryJavaSourceFileObject(Path path) throws IOException {
+    public InMemoryJavaSourceFileObject(Path path) throws IOException {
         this(path.getFileName().toString(), new FileInputStream(path.toFile()));
     }
 

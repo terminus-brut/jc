@@ -22,6 +22,8 @@ import java.util.List;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import org.jc.impl.Compiler;
+import org.jc.impl.InMemoryJavaSourceFileObject;
 
 /**
  * @author Marián Konček

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jc;
+package org.jc.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;
