@@ -22,40 +22,37 @@ import java.util.List;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import org.jc.impl.Compiler;
+import org.jc.impl.InMemoryJavaSourceFileObject;
 
 /**
  * @author Marián Konček
  */
-public class Tool
-{
-	static class Arguments
-	{
-		@Parameter(names = {"-h", "--help"}, help = true, description =
-				"Display help.")
-		boolean help = false;
-		@Parameter(names = {"-i", "--inputs"})
-		List<String> inputs = new ArrayList<>();
-	}
-	
-	public static void main(String[] args) throws IOException
-	{
-		var arguments = new Arguments();
-		var jcommander = JCommander.newBuilder().addObject(arguments).build();
-		jcommander.parse(args);
-		
-		if (arguments.help)
-		{
-			jcommander.usage();
-			return;
-		}
-		
-		var compiler = new Compiler();
-		
-		for (final var arg : arguments.inputs)
-		{
-			compiler.add(new InMemoryJavaSourceFileObject(Paths.get(arg)));
-		}
-		
-		compiler.compile();
-	}
+public class Tool {
+    static class Arguments {
+        @Parameter(names = {"-h", "--help"}, help = true, description =
+                "Display help.")
+        boolean help = false;
+        @Parameter(names = {"-i", "--inputs"})
+        List<String> inputs = new ArrayList<>();
+    }
+
+    public static void main(String[] args) throws IOException {
+        var arguments = new Arguments();
+        var jcommander = JCommander.newBuilder().addObject(arguments).build();
+        jcommander.parse(args);
+
+        if (arguments.help) {
+            jcommander.usage();
+            return;
+        }
+
+        var compiler = new Compiler();
+
+        for (final var arg : arguments.inputs) {
+            compiler.add(new InMemoryJavaSourceFileObject(Paths.get(arg)));
+        }
+
+        compiler.compile();
+    }
 }

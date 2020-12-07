@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jc;
+package org.jc.impl;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -21,12 +21,10 @@ import java.util.stream.Collectors;
 /**
  * @author Marián Konček
  */
-public class DebugPrinter
-{
-	public static String to_string(String name, Object... args)
-	{
-		return name + "(" + Arrays.<Object> asList(args).stream()
-				.map(o -> o == null ? "<null>" : o.toString())
-				.collect(Collectors.joining(", ")) + ")";
-	}
+public class DebugPrinter {
+    public static String to_string(String name, Object... args) {
+        return name + "(" + Arrays.<Object>asList(args).stream()
+                .map(o -> o == null ? "<null>" : o.toString())
+                .collect(Collectors.joining(", ")) + ")";
+    }
 }
