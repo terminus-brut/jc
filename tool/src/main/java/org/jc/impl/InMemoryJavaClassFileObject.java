@@ -15,53 +15,44 @@
  */
 package org.jc.impl;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 
 import javax.tools.SimpleJavaFileObject;
+
+import org.apache.commons.io.output.AbstractByteArrayOutputStream;
+import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream;
 
 /**
  * @author Marián Konček
  */
 public class InMemoryJavaClassFileObject extends SimpleJavaFileObject {
-    class Bytes extends ByteArrayOutputStream {
-        public byte[] buf() {
-            return this.buf;
-        }
-    }
-
-    Bytes bytes = new Bytes();
-
-    public InMemoryJavaClassFileObject(String name) {
-        super(URI.create("class:///" + name), Kind.CLASS);
-    }
-
-    public byte[] byte_array() {
-        return bytes.buf();
-    }
-
-    @Override
-    public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException {
-        System.err.println(DebugPrinter.to_string("InMemoryJavaClassFileObject::getCharContent", ignoreEncodingErrors));
-
-        return bytes.toString();
-    }
-
-    @Override
-    public OutputStream openOutputStream() throws IOException {
-        System.err.println(DebugPrinter.to_string("InMemoryJavaClassFileObject::openOutputStream"));
-
-        return bytes;
-    }
-
-    @Override
-    public Writer openWriter() throws IOException {
-        System.err.println(DebugPrinter.to_string("InMemoryJavaClassFileObject::openWriter"));
-
-        return new OutputStreamWriter(openOutputStream());
-    }
+    private AbstractByteArrayOutputStream bytes = new UnsynchronizedByteArrayOutputStream();
+	
+	public InMemoryJavaClassFileObject(String name) {
+		super(URI.create("class:///" + name), Kind.CLASS);
+	}
+	
+	@Override
+	public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException {
+		System.err.println(DebugPrinter.to_string("InMemoryJavaClassFileObject::getCharContent", ignoreEncodingErrors));
+		
+		return bytes.toString(StandardCharsets.US_ASCII);
+	}
+	
+	@Override
+	public InputStream openInputStream() throws IOException {
+		System.err.println(DebugPrinter.to_string("InMemoryJavaClassFileObject::openInputStream"));
+		return bytes.toInputStream();
+	}
+	
+	@Override
+	public OutputStream openOutputStream() throws IOException {
+		System.err.println(DebugPrinter.to_string("InMemoryJavaClassFileObject::openOutputStream"));
+		
+		return bytes;
+	}
 }

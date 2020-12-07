@@ -15,7 +15,10 @@
  */
 package org.jc.impl;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,20 +52,27 @@ public class Compiler {
         compilation_units.add(object);
     }
 
-    public void compile() throws IOException {
-        if (!compiler.getTask(
-                null,
-                file_manager,
-                diagnostics,
-                null,
-                null,
-                compilation_units)
-                .call()) {
-            throw new RuntimeException("Could not compile file");
-        }
-
-        for (final var class_out : file_manager.class_outputs()) {
-            System.out.println(class_out.byte_array());
-        }
-    }
+    public void compile(Path output_directory) throws IOException {
+		if (! compiler.getTask(
+				null,
+				file_manager,
+				diagnostics,
+				null,
+				null,
+				compilation_units)
+				.call()) {
+			throw new RuntimeException("Could not compile file");
+		}
+		
+		for (final var class_out : file_manager.classOutputs()) {
+			var out_path = output_directory.resolve(
+					Paths.get("./" + class_out.getName() + ".class"));
+			
+			System.out.println(out_path);
+			
+			try (var os = new FileOutputStream(out_path.toFile())) {
+				class_out.openInputStream().transferTo(os);
+			}
+		}
+	}
 }

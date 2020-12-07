@@ -20,10 +20,11 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.Parameter;
 import org.jc.impl.Compiler;
 import org.jc.impl.InMemoryJavaSourceFileObject;
+
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
 
 /**
  * @author Marián Konček
@@ -33,8 +34,12 @@ public class Tool {
         @Parameter(names = {"-h", "--help"}, help = true, description =
                 "Display help.")
         boolean help = false;
+        
         @Parameter(names = {"-i", "--inputs"})
         List<String> inputs = new ArrayList<>();
+        
+        @Parameter(names = {"-o", "--outdir"})
+        String output;
     }
 
     public static void main(String[] args) throws IOException {
@@ -50,9 +55,9 @@ public class Tool {
         var compiler = new Compiler();
 
         for (final var arg : arguments.inputs) {
-            compiler.add(new InMemoryJavaSourceFileObject(Paths.get(arg)));
+        	compiler.add(new InMemoryJavaSourceFileObject(Paths.get(arg)));
         }
 
-        compiler.compile();
+        compiler.compile(Paths.get(arguments.output));
     }
 }

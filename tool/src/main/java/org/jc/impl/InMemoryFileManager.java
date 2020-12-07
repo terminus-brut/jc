@@ -32,10 +32,10 @@ import javax.tools.StandardLocation;
  * @author Marián Konček
  */
 public class InMemoryFileManager implements JavaFileManager {
-    JavaFileManager delegate;
-    ArrayList<InMemoryJavaClassFileObject> classes = new ArrayList<>();
+    private JavaFileManager delegate;
+    private ArrayList<InMemoryJavaClassFileObject> classes = new ArrayList<>();
 
-    public Collection<InMemoryJavaClassFileObject> class_outputs() {
+    public Collection<InMemoryJavaClassFileObject> classOutputs() {
         return classes;
     }
 
@@ -111,13 +111,7 @@ public class InMemoryFileManager implements JavaFileManager {
     @Override
     public ClassLoader getClassLoader(Location location) {
         System.err.println(DebugPrinter.to_string("InMemoryFileManager::getClassLoader", location));
-        // return delegate.getClassLoader(location);
-        var delegatel = delegate.getClassLoader(location);
-
-        System.err.println(delegatel);
-        var n = new DelegatingClassLoader(delegatel);
-        System.err.println(n.delegate);
-        return n;
+        return new DelegatingClassLoader(delegate.getClassLoader(location));
     }
 
     @Override
