@@ -2,6 +2,7 @@ package org.jc.api;
 
 
 import java.util.Collection;
+import java.util.List;
 
 public interface ClassesProvider {
     /**
@@ -11,4 +12,12 @@ public interface ClassesProvider {
      * @return bytecode of all found classes
      */
     Collection<IdentifiedBytecode> getClass(ClassIdentifier... names);
+
+    /**
+     * Warning, may include labdas and will include inner classes with $notations
+     * Intentionally not usinf ClassIdentifier, but may chnage to it
+     *
+     * @return all fully qualified classes visible from classapth
+     */
+    List<String> getClassPathListing();
 }
