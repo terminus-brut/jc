@@ -46,7 +46,7 @@ public class InMemoryJavaSourceFileObject extends SimpleJavaFileObject {
 
     @Override
     public CharSequence getCharContent(boolean arg0) throws IOException {
-        System.err.println(DebugPrinter.to_string("InMemoryJavaSourceFileObject::getCharContent", arg0));
+        System.err.println(DebugPrinter.toString("InMemoryJavaSourceFileObject::getCharContent", arg0));
         return source;
     }
 }

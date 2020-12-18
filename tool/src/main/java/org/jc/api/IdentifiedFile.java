@@ -14,14 +14,14 @@ public class IdentifiedFile {
     public ClassIdentifier getClassIdentifier() {
         return classIdentifier;
     }
-
+    
     public byte[] getFile() {
         return file;
     }
 
     @Override
     public String toString() {
-        return classIdentifier+"*"+file.length;
+        return classIdentifier + "*" + file.length;
     }
 
     @Override

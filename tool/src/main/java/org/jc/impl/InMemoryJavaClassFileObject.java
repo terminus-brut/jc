@@ -31,28 +31,40 @@ import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream;
  */
 public class InMemoryJavaClassFileObject extends SimpleJavaFileObject {
     private AbstractByteArrayOutputStream bytes = new UnsynchronizedByteArrayOutputStream();
+    // private Set<JavaFileObject> objects;
 	
-	public InMemoryJavaClassFileObject(String name) {
+	// public InMemoryJavaClassFileObject(/* JavaFileObject fileObject, Set<JavaFileObject> objects*/) {
+    public InMemoryJavaClassFileObject(String name) {
+		// super(fileObject);
+		// this.objects = objects;
+		// new SimpleJavaFileObject(URI.create("class:///" + name), Kind.CLASS);
 		super(URI.create("class:///" + name), Kind.CLASS);
 	}
 	
 	@Override
 	public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException {
-		System.err.println(DebugPrinter.to_string("InMemoryJavaClassFileObject::getCharContent", ignoreEncodingErrors));
-		
+		System.err.println(DebugPrinter.toString("InMemoryJavaClassFileObject::getCharContent", ignoreEncodingErrors));
+		// objects.add(fileObject);
 		return bytes.toString(StandardCharsets.US_ASCII);
 	}
 	
 	@Override
 	public InputStream openInputStream() throws IOException {
-		System.err.println(DebugPrinter.to_string("InMemoryJavaClassFileObject::openInputStream"));
+		System.err.println(DebugPrinter.toString("InMemoryJavaClassFileObject::openInputStream"));
+		// objects.add(fileObject);
 		return bytes.toInputStream();
 	}
 	
 	@Override
 	public OutputStream openOutputStream() throws IOException {
-		System.err.println(DebugPrinter.to_string("InMemoryJavaClassFileObject::openOutputStream"));
-		
+		System.err.println(DebugPrinter.toString("InMemoryJavaClassFileObject::openOutputStream"));
+		// objects.add(fileObject);
 		return bytes;
+	}
+	
+	@Override
+	public boolean isNameCompatible(String simpleName, Kind kind) {
+		System.err.println(DebugPrinter.toString("InMemoryJavaClassFileObject::isNameCompatible", simpleName, kind));
+		return super.isNameCompatible(simpleName, kind);
 	}
 }

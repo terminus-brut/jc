@@ -8,10 +8,8 @@ import java.util.Optional;
  * Java source file with its fully qualified name.
  */
 public class IdentifiedSource extends IdentifiedFile {
-
-
     private final Optional<String> encoding;
-
+    
     /**
      *
      * @param classIdentifier fully qualified name of class
@@ -24,7 +22,7 @@ public class IdentifiedSource extends IdentifiedFile {
     }
 
     public String getSourceCode() throws UnsupportedEncodingException {
-        if (encoding.isPresent()){
+        if (encoding.isPresent()) {
             return new String(getFile());
         } else {
             return new String(getFile(), encoding.get());

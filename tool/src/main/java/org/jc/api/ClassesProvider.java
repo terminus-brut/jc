@@ -4,7 +4,6 @@ package org.jc.api;
 import java.util.Collection;
 
 public interface ClassesProvider {
-
     /**
      * Callback for compiler, which provides, on demand, the depnendencies compiler is missing.
      *
@@ -12,5 +11,4 @@ public interface ClassesProvider {
      * @return bytecode of all found classes
      */
     Collection<IdentifiedBytecode> getClass(ClassIdentifier... names);
-
 }

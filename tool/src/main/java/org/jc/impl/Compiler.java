@@ -21,6 +21,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
 
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
@@ -31,13 +33,26 @@ import javax.tools.ToolProvider;
 public class Compiler {
     final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     final InMemoryFileManager file_manager = new InMemoryFileManager(compiler.getStandardFileManager(null, null, null));
-    final DiagnosticListener<JavaFileObject> diagnostics = new DiagnosticListener<>() {
+    private DiagnosticListener<JavaFileObject> diagnostics = new DiagnosticListener<>() {
         @Override
         public void report(Diagnostic<? extends JavaFileObject> diagnostic) {
-            System.err.println("DiagnosticListener reporting: " + diagnostic.getMessage(null));
+        	var msg = diagnostic.getMessage(Locale.ENGLISH);
+        	final var begin_text = "package ";
+        	
+            System.err.println("DiagnosticListener reporting: " + msg + ", " + diagnostic.getCode());
+            System.err.println("DiagnosticListener: \"" + diagnostic.getCode() + "\"");
+            
+            if (diagnostic.getCode().equals("compiler.err.doesnt.exist")) {
+            	if (msg.startsWith(begin_text)) {
+            		final var begin_idx = begin_text.length();
+            		final var end_idx = msg.indexOf(" does not exist");
+            		
+            		missing_dependencies.add(msg.substring(begin_idx, end_idx));
+            	}
+            }
         }
     };
-
+    private List<String> missing_dependencies = new ArrayList<>();
     final List<JavaFileObject> compilation_units = new ArrayList<>();
 
     public Compiler() throws IOException {
@@ -53,7 +68,7 @@ public class Compiler {
     }
 
     public void compile(Path output_directory) throws IOException {
-		if (! compiler.getTask(
+    	while (!compiler.getTask(
 				null,
 				file_manager,
 				diagnostics,
@@ -61,7 +76,12 @@ public class Compiler {
 				null,
 				compilation_units)
 				.call()) {
-			throw new RuntimeException("Could not compile file");
+			if (!missing_dependencies.isEmpty()) {
+				System.err.println("resolving deps: " + missing_dependencies.stream().collect(Collectors.joining(", ")));
+				break;
+			} else {
+				throw new RuntimeException("Could not compile file");
+			}
 		}
 		
 		for (final var class_out : file_manager.classOutputs()) {
