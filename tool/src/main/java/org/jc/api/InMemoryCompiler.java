@@ -11,5 +11,5 @@ public interface InMemoryCompiler {
      * @return compiled bytecode of all javaSourceFiles
      */
     Collection<IdentifiedBytecode> compileClass(ClassesProvider classprovider, Optional<MessagesListener> messagesConsummer,
-    		IdentifiedSource... javaSourceFiles);
+            IdentifiedSource... javaSourceFiles);
 }

@@ -118,7 +118,7 @@ public class InMemoryFileManager implements JavaFileManager {
 
     @Override
     public FileObject getFileForInput(Location location, String packageName,
-    		String relativeName) throws IOException {
+            String relativeName) throws IOException {
         System.err.println(DebugPrinter.toString(
                 "InMemoryFileManager::getFileForInput", location, packageName, relativeName));
         return delegate.getFileForInput(location, packageName, relativeName);
@@ -126,7 +126,7 @@ public class InMemoryFileManager implements JavaFileManager {
 
     @Override
     public FileObject getFileForOutput(Location location, String packageName,
-    		String relativeName, FileObject sibling) throws IOException {
+            String relativeName, FileObject sibling) throws IOException {
         System.err.println(DebugPrinter.toString(
                 "InMemoryFileManager::getFileForOutput", packageName, relativeName, sibling));
         return delegate.getFileForOutput(location, packageName, relativeName, sibling);
@@ -134,7 +134,7 @@ public class InMemoryFileManager implements JavaFileManager {
 
     @Override
     public JavaFileObject getJavaFileForInput(Location location,
-    		String className, Kind kind) throws IOException {
+            String className, Kind kind) throws IOException {
         System.err.println(DebugPrinter.toString(
                 "InMemoryFileManager::getJavaFileForInput", location, className, kind));
         return delegate.getJavaFileForInput(location, className, kind);
@@ -142,16 +142,16 @@ public class InMemoryFileManager implements JavaFileManager {
     
     @Override
     public JavaFileObject getJavaFileForOutput(Location location,
-    		String className, Kind kind, FileObject sibling) throws IOException {
-    	System.err.println(DebugPrinter.toString("InMemoryFileManager::getJavaFileForOutput",
-    			location, className, kind, sibling));
-    	
-    	if (kind == Kind.CLASS && location == StandardLocation.CLASS_OUTPUT) {
-    		final var result = new InMemoryJavaClassFileObject(
-    				sibling.getName().substring(1)
+            String className, Kind kind, FileObject sibling) throws IOException {
+        System.err.println(DebugPrinter.toString("InMemoryFileManager::getJavaFileForOutput",
+                location, className, kind, sibling));
+        
+        if (kind == Kind.CLASS && location == StandardLocation.CLASS_OUTPUT) {
+            final var result = new InMemoryJavaClassFileObject(
+                    sibling.getName().substring(1)
             );
-    		classes.add(result);
-    		
+            classes.add(result);
+            
             System.out.println("\t" + classes.size());
             
             return result;
@@ -176,15 +176,15 @@ public class InMemoryFileManager implements JavaFileManager {
 
     @Override
     public Iterable<JavaFileObject> list(Location location, String packageName,
-    		Set<Kind> kinds, boolean recurse) throws IOException {
+            Set<Kind> kinds, boolean recurse) throws IOException {
         System.err.println(DebugPrinter.toString("InMemoryFileManager::list", location, packageName, kinds, recurse));
         
         /*
         if (location.equals(StandardLocation.CLASS_PATH) || location.equals(StandardLocation.SOURCE_PATH)) {
-        	
-        	var result = new ArrayList<JavaFileObject>();
-        	result.add(new InMemoryJavaClassFileObject("asd"));
-        	return result;
+            
+            var result = new ArrayList<JavaFileObject>();
+            result.add(new InMemoryJavaClassFileObject("asd"));
+            return result;
         }
         */
         

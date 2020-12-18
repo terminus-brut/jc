@@ -55,7 +55,7 @@ public class Tool {
         var compiler = new Compiler();
 
         for (final var arg : arguments.inputs) {
-        	compiler.add(new InMemoryJavaSourceFileObject(Paths.get(arg)));
+            compiler.add(new InMemoryJavaSourceFileObject(Paths.get(arg)));
         }
 
         compiler.compile(Paths.get(arguments.output));
