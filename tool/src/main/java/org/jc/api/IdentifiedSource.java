@@ -23,9 +23,9 @@ public class IdentifiedSource extends IdentifiedFile {
 
     public String getSourceCode() throws UnsupportedEncodingException {
         if (encoding.isPresent()) {
-            return new String(getFile());
-        } else {
             return new String(getFile(), encoding.get());
+        } else {
+            return new String(getFile());
         }
     }
 }
