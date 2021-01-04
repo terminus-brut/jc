@@ -7,7 +7,7 @@
   <parent>
     <groupId>org.jc</groupId>
     <artifactId>parent</artifactId>
-    <version>${revision}</version>
+    <version>1.0</version>
     <relativePath>../parent</relativePath>
   </parent>
   
