@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jc;
+package org.terminusbrut.classpathless;
 
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jc.impl.Compiler;
-import org.jc.impl.InMemoryJavaSourceFileObject;
+import org.terminusbrut.classpathless.impl.Compiler;
+import org.terminusbrut.classpathless.impl.InMemoryJavaSourceFileObject;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;

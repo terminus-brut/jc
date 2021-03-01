@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jc.impl;
+package org.terminusbrut.classpathless.impl;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -24,6 +24,8 @@ import java.nio.file.Path;
 import javax.tools.SimpleJavaFileObject;
 
 import org.apache.commons.io.IOUtils;
+
+import edu.umd.cs.findbugs.annotations.*;
 
 /**
  * @author Marián Konček
@@ -40,6 +42,7 @@ public class InMemoryJavaSourceFileObject extends SimpleJavaFileObject {
         this(name, IOUtils.toString(is, (String) null));
     }
 
+    @SuppressFBWarnings(value = {"NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"}, justification = "can not see it:(")
     public InMemoryJavaSourceFileObject(Path path) throws IOException {
         this(path.getFileName().toString(), new FileInputStream(path.toFile()));
     }

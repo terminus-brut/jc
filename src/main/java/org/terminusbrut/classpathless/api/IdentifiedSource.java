@@ -1,12 +1,14 @@
-package org.jc.api;
+package org.terminusbrut.classpathless.api;
 
 
 import java.io.UnsupportedEncodingException;
 import java.util.Optional;
+import edu.umd.cs.findbugs.annotations.*;
 
 /**
  * Java source file with its fully qualified name.
  */
+@SuppressFBWarnings(value = {"EQ_DOESNT_OVERRIDE_EQUALS"}, justification = "intentionally using equals from superclass")
 public class IdentifiedSource extends IdentifiedFile {
     private final Optional<String> encoding;
     
@@ -25,7 +27,7 @@ public class IdentifiedSource extends IdentifiedFile {
         if (encoding.isPresent()) {
             return new String(getFile(), encoding.get());
         } else {
-            return new String(getFile());
+            return new String(getFile(), "utf-8");
         }
     }
 }

@@ -1,4 +1,4 @@
-package org.jc.api;
+package org.terminusbrut.classpathless.api;
 
 /**
  * Compiled bytecode of class with its fully qualified name
