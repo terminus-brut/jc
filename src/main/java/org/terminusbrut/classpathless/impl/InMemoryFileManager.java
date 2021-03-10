@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jc.impl;
+package org.terminusbrut.classpathless.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.security.*;
 
 import javax.tools.FileObject;
 import javax.tools.JavaFileManager;
@@ -35,7 +36,6 @@ import javax.tools.StandardLocation;
 public class InMemoryFileManager implements JavaFileManager {
     private JavaFileManager delegate;
     private ArrayList<InMemoryJavaClassFileObject> classes = new ArrayList<>();
-    private Set<JavaFileObject> external_dependencies = new LinkedHashSet<>();
 
     public Collection<InMemoryJavaClassFileObject> classOutputs() {
         return classes;
@@ -112,8 +112,12 @@ public class InMemoryFileManager implements JavaFileManager {
 
     @Override
     public ClassLoader getClassLoader(Location location) {
-        System.err.println(DebugPrinter.toString("InMemoryFileManager::getClassLoader", location));
-        return new DelegatingClassLoader(delegate.getClassLoader(location));
+        return (ClassLoader)AccessController.doPrivileged(new PrivilegedAction() {
+            public Object run() {
+                System.err.println(DebugPrinter.toString("InMemoryFileManager::getClassLoader", location));
+                return new DelegatingClassLoader(delegate.getClassLoader(location));
+            }
+        });
     }
 
     @Override
