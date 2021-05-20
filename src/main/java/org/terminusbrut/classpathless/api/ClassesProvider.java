@@ -1,6 +1,5 @@
 package org.terminusbrut.classpathless.api;
 
-
 import java.util.Collection;
 import java.util.List;
 

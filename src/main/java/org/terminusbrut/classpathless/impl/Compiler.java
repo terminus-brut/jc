@@ -32,21 +32,21 @@ import javax.tools.ToolProvider;
 
 public class Compiler {
     final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-    final InMemoryFileManager file_manager = new InMemoryFileManager(compiler.getStandardFileManager(null, null, null));
+    final InMemoryFileManager fileManager;
     private DiagnosticListener<JavaFileObject> diagnostics = new DiagnosticListener<>() {
         @Override
         public void report(Diagnostic<? extends JavaFileObject> diagnostic) {
             var msg = diagnostic.getMessage(Locale.ENGLISH);
             final var begin_text = "package ";
-            
+
             System.err.println("DiagnosticListener reporting: " + msg + ", " + diagnostic.getCode());
             System.err.println("DiagnosticListener: \"" + diagnostic.getCode() + "\"");
-            
+
             if (diagnostic.getCode().equals("compiler.err.doesnt.exist")) {
                 if (msg.startsWith(begin_text)) {
                     final var begin_idx = begin_text.length();
                     final var end_idx = msg.indexOf(" does not exist");
-                    
+
                     missing_dependencies.add(msg.substring(begin_idx, end_idx));
                 }
             }
@@ -55,12 +55,14 @@ public class Compiler {
     private List<String> missing_dependencies = new ArrayList<>();
     final List<JavaFileObject> compilation_units = new ArrayList<>();
 
-    public Compiler() throws IOException {
+    public Compiler(String classpath) throws IOException {
+        this.fileManager = new InMemoryFileManager(compiler.getStandardFileManager(null, null, null), classpath);
         /*
         System.out.println(tempdir.toString());
         file_manager.setLocation(StandardLocation.CLASS_OUTPUT,
                 Arrays.asList(tempdir.toFile()));
-                */
+         */
+        System.out.println(this.fileManager.classpath);
     }
 
     public void add(JavaFileObject object) {
@@ -70,7 +72,7 @@ public class Compiler {
     public void compile(Path output_directory) throws IOException {
         while (!compiler.getTask(
                 null,
-                file_manager,
+                fileManager,
                 diagnostics,
                 null,
                 null,
@@ -83,13 +85,13 @@ public class Compiler {
                 throw new RuntimeException("Could not compile file");
             }
         }
-        
-        for (final var class_out : file_manager.classOutputs()) {
+
+        for (final var class_out : fileManager.classOutputs()) {
             var out_path = output_directory.resolve(
                     Paths.get("./" + class_out.getName() + ".class"));
-            
+
             System.out.println(out_path);
-            
+
             try (var os = new FileOutputStream(out_path.toFile())) {
                 class_out.openInputStream().transferTo(os);
             }

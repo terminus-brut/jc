@@ -30,8 +30,6 @@ import com.beust.jcommander.Parameter;
  * @author Marián Konček
  */
 public class Tool {
-    final static String CP_SEPARATOR = System.getProperty("path.separator");
-
     static class Arguments {
         @Parameter(names = {"-h", "--help"}, help = true, description =
                 "Display help.")
@@ -57,10 +55,10 @@ public class Tool {
             return;
         }
 
-        var compiler = new Compiler();
+        var compiler = new Compiler(arguments.classpath);
 
-        for (final var arg : arguments.inputs) {
-            compiler.add(new InMemoryJavaSourceFileObject(Paths.get(arg)));
+        for (final var inputFile : arguments.inputs) {
+            compiler.add(new InMemoryJavaSourceFileObject(Paths.get(inputFile)));
         }
 
         compiler.compile(Paths.get(arguments.output));

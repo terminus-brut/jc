@@ -19,8 +19,11 @@ import java.io.IOException;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.ServiceLoader;
 import java.util.Set;
 
@@ -34,16 +37,23 @@ import javax.tools.StandardLocation;
  * @author Marián Konček
  */
 public class InMemoryFileManager implements JavaFileManager {
+    static final String CP_SEPARATOR = System.getProperty("path.separator");
+
     private JavaFileManager delegate;
-    private ArrayList<InMemoryJavaClassFileObject> classes = new ArrayList<>();
+    private List<InMemoryJavaClassFileObject> classes = new ArrayList<>();
+    public List<String> classpath = Collections.emptyList();
 
     public Collection<InMemoryJavaClassFileObject> classOutputs() {
         return classes;
     }
 
-    public InMemoryFileManager(JavaFileManager delegate) {
+    public InMemoryFileManager(JavaFileManager delegate, String classpath) {
         super();
         this.delegate = delegate;
+
+        if (classpath != null) {
+            this.classpath = Arrays.asList(classpath.split(CP_SEPARATOR));
+        }
     }
 
     @Override
@@ -140,20 +150,20 @@ public class InMemoryFileManager implements JavaFileManager {
         System.err.println(DebugPrinter.fromStack(location, className, kind));
         return delegate.getJavaFileForInput(location, className, kind);
     }
-    
+
     @Override
     public JavaFileObject getJavaFileForOutput(Location location,
             String className, Kind kind, FileObject sibling) throws IOException {
         System.err.println(DebugPrinter.fromStack(location, className, kind, sibling));
-        
+
         if (kind == Kind.CLASS && location == StandardLocation.CLASS_OUTPUT) {
             final var result = new InMemoryJavaClassFileObject(
                     sibling.getName().substring(1)
-            );
+                    );
             classes.add(result);
-            
+
             System.out.println("\t" + classes.size());
-            
+
             return result;
         } else {
             return delegate.getJavaFileForOutput(location, className, kind, sibling);
@@ -162,14 +172,18 @@ public class InMemoryFileManager implements JavaFileManager {
 
     @Override
     public boolean hasLocation(Location location) {
-        System.err.println(DebugPrinter.fromStack(location));
-        return delegate.hasLocation(location);
+        System.err.print(DebugPrinter.fromStack(location));
+        var result = delegate.hasLocation(location);
+        System.err.print(", returning: ");
+        System.err.println(result);
+        return result;
     }
 
     @Override
     public String inferBinaryName(Location location, JavaFileObject file) {
-        System.err.println(DebugPrinter.fromStack(location, file));
+        System.err.print(DebugPrinter.fromStack(location, file));
         var result = delegate.inferBinaryName(location, file);
+        System.err.print(", returning: ");
         System.err.println(result);
         return result;
     }
@@ -177,18 +191,21 @@ public class InMemoryFileManager implements JavaFileManager {
     @Override
     public Iterable<JavaFileObject> list(Location location, String packageName,
             Set<Kind> kinds, boolean recurse) throws IOException {
-        System.err.println(DebugPrinter.fromStack(location, packageName, kinds, recurse));
-        
+        System.err.print(DebugPrinter.fromStack(location, packageName, kinds, recurse));
+        var result = delegate.list(location, packageName, kinds, recurse);
+        System.err.print(", returning: ");
+        System.err.println(result);
+
         /*
         if (location.equals(StandardLocation.CLASS_PATH) || location.equals(StandardLocation.SOURCE_PATH)) {
-            
+
             var result = new ArrayList<JavaFileObject>();
             result.add(new InMemoryJavaClassFileObject("asd"));
             return result;
         }
-        */
-        
-        return delegate.list(location, packageName, kinds, recurse);
+         */
+
+        return result;
     }
 
     @Override
