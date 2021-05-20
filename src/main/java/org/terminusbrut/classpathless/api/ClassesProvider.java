@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface ClassesProvider {
     /**
-     * Callback for compiler, which provides, on demand, the depnendencies compiler is missing.
+     * Callback for compiler, which provides, on demand, the dependencies compiler is missing.
      *
      * @param names names of classes the provider should return
      * @return bytecode of all found classes
@@ -14,10 +14,10 @@ public interface ClassesProvider {
     Collection<IdentifiedBytecode> getClass(ClassIdentifier... names);
 
     /**
-     * Warning, may include labdas and will include inner classes with $notations
-     * Intentionally not usinf ClassIdentifier, but may chnage to it
+     * Warning, may include lambdas and will include inner classes with $notations
+     * Intentionally not using ClassIdentifier, but may change to it
      *
-     * @return all fully qualified classes visible from classapth
+     * @return all fully qualified classes visible from classpath
      */
     List<String> getClassPathListing();
 }

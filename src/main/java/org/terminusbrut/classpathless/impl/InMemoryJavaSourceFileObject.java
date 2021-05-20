@@ -25,7 +25,7 @@ import javax.tools.SimpleJavaFileObject;
 
 import org.apache.commons.io.IOUtils;
 
-import edu.umd.cs.findbugs.annotations.*;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * @author Marián Konček
@@ -49,7 +49,7 @@ public class InMemoryJavaSourceFileObject extends SimpleJavaFileObject {
 
     @Override
     public CharSequence getCharContent(boolean arg0) throws IOException {
-        System.err.println(DebugPrinter.toString("InMemoryJavaSourceFileObject::getCharContent", arg0));
+        System.err.println(DebugPrinter.fromStack(arg0));
         return source;
     }
 }

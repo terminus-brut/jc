@@ -3,7 +3,8 @@ package org.terminusbrut.classpathless.api;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Optional;
-import edu.umd.cs.findbugs.annotations.*;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Java source file with its fully qualified name.

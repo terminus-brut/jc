@@ -30,16 +30,21 @@ import com.beust.jcommander.Parameter;
  * @author Marián Konček
  */
 public class Tool {
+    final static String CP_SEPARATOR = System.getProperty("path.separator");
+
     static class Arguments {
         @Parameter(names = {"-h", "--help"}, help = true, description =
                 "Display help.")
         boolean help = false;
-        
-        @Parameter(names = {"-i", "--inputs"})
+
+        @Parameter(names = {"-cp", "--classpath"})
+        String classpath = null;
+
+        @Parameter(names = {"-i", "--inputs"}, required = true)
         List<String> inputs = new ArrayList<>();
-        
+
         @Parameter(names = {"-o", "--outdir"})
-        String output;
+        String output = ".";
     }
 
     public static void main(String[] args) throws IOException {
