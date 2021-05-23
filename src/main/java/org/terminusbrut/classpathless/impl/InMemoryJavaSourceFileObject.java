@@ -50,6 +50,7 @@ public class InMemoryJavaSourceFileObject extends SimpleJavaFileObject {
     @Override
     public CharSequence getCharContent(boolean arg0) throws IOException {
         System.err.println(DebugPrinter.fromStack(arg0));
+        System.out.println(this.toUri());
         return source;
     }
 }

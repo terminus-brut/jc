@@ -15,13 +15,14 @@
  */
 package org.terminusbrut.classpathless.impl;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.UncheckedIOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.tools.Diagnostic;
@@ -30,71 +31,117 @@ import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.ToolProvider;
 
-public class Compiler {
+import org.terminusbrut.classpathless.api.ClassIdentifier;
+import org.terminusbrut.classpathless.api.ClassesProvider;
+import org.terminusbrut.classpathless.api.IdentifiedBytecode;
+import org.terminusbrut.classpathless.api.IdentifiedSource;
+import org.terminusbrut.classpathless.api.InMemoryCompiler;
+import org.terminusbrut.classpathless.api.MessagesListener;
+
+public class Compiler implements InMemoryCompiler {
     final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     final InMemoryFileManager fileManager;
+
+    /// TODO hook this up to @param messagesConsummer
     private DiagnosticListener<JavaFileObject> diagnostics = new DiagnosticListener<>() {
         @Override
         public void report(Diagnostic<? extends JavaFileObject> diagnostic) {
             var msg = diagnostic.getMessage(Locale.ENGLISH);
-            final var begin_text = "package ";
+            final var beginText = "package ";
 
             System.err.println("DiagnosticListener reporting: " + msg + ", " + diagnostic.getCode());
             System.err.println("DiagnosticListener: \"" + diagnostic.getCode() + "\"");
 
             if (diagnostic.getCode().equals("compiler.err.doesnt.exist")) {
-                if (msg.startsWith(begin_text)) {
-                    final var begin_idx = begin_text.length();
-                    final var end_idx = msg.indexOf(" does not exist");
+                if (msg.startsWith(beginText)) {
+                    final var beginIdx = beginText.length();
+                    final var endIdx = msg.indexOf(" does not exist");
 
-                    missing_dependencies.add(msg.substring(begin_idx, end_idx));
+                    missingDependencies.add(msg.substring(beginIdx, endIdx));
                 }
             }
         }
     };
-    private List<String> missing_dependencies = new ArrayList<>();
-    final List<JavaFileObject> compilation_units = new ArrayList<>();
+    private List<String> missingDependencies = new ArrayList<>();
+    final List<JavaFileObject> compilationUnits = new ArrayList<>();
 
-    public Compiler(String classpath) throws IOException {
-        this.fileManager = new InMemoryFileManager(compiler.getStandardFileManager(null, null, null), classpath);
+    public Compiler() throws IOException {
+        this.fileManager = new InMemoryFileManager(
+                compiler.getStandardFileManager(null, null, null));
         /*
         System.out.println(tempdir.toString());
         file_manager.setLocation(StandardLocation.CLASS_OUTPUT,
                 Arrays.asList(tempdir.toFile()));
          */
-        System.out.println(this.fileManager.classpath);
     }
 
-    public void add(JavaFileObject object) {
-        compilation_units.add(object);
-    }
+    @Override
+    public Collection<IdentifiedBytecode> compileClass(
+            ClassesProvider classprovider,
+            Optional<MessagesListener> messagesConsummer,
+            IdentifiedSource... javaSourceFiles) {
+        final List<JavaFileObject> compilationUnits = new ArrayList<>();
 
-    public void compile(Path output_directory) throws IOException {
+        try {
+            for (var source : javaSourceFiles) {
+                /// NOTE the JavaFileObject's toUri method needs to return something
+                /// that ends with the proper Java source file name and extension
+                /// otherwise the compiler throws an error
+                var sourceName = source.getClassIdentifier().getFullName();
+                sourceName = sourceName.substring(
+                        sourceName.lastIndexOf('.') + 1, sourceName.length()) + ".java";
+
+                compilationUnits.add(new InMemoryJavaSourceFileObject(
+                        sourceName, source.getSourceCode()));
+            }
+        } catch (UnsupportedEncodingException ex) {
+            throw new RuntimeException(ex);
+        }
+
+        var classOutputs = new ArrayList<JavaFileObject>();
+        fileManager.setClassOutput(classOutputs);
+        fileManager.setClassProvider(classprovider);
+
         while (!compiler.getTask(
                 null,
                 fileManager,
                 diagnostics,
                 null,
                 null,
-                compilation_units)
+                compilationUnits)
                 .call()) {
-            if (!missing_dependencies.isEmpty()) {
-                System.err.println("resolving deps: " + missing_dependencies.stream().collect(Collectors.joining(", ")));
+            if (!missingDependencies.isEmpty()) {
+                System.err.println("resolving deps: " + missingDependencies.stream()
+                .collect(Collectors.joining(", ")));
                 break;
             } else {
                 throw new RuntimeException("Could not compile file");
             }
         }
 
-        for (final var class_out : fileManager.classOutputs()) {
-            var out_path = output_directory.resolve(
-                    Paths.get("./" + class_out.getName() + ".class"));
+        fileManager.setClassOutput(null);
+        fileManager.setClassProvider(null);
+        fileManager.clear();
 
-            System.out.println(out_path);
+        var result = new ArrayList<IdentifiedBytecode>();
 
-            try (var os = new FileOutputStream(out_path.toFile())) {
-                class_out.openInputStream().transferTo(os);
+        for (final var classOutput : classOutputs) {
+            /*
+            /// Remove ".java"
+            var shortName = classOutput.getName();
+            shortName = shortName.substring(0, shortName.length() - 5);
+             */
+            System.out.println(classOutput.toUri());
+            var identifier = new ClassIdentifier(classOutput.getName());
+            byte[] content;
+            try {
+                content = classOutput.openInputStream().readAllBytes();
+            } catch (IOException ex) {
+                throw new UncheckedIOException(ex);
             }
+            result.add(new IdentifiedBytecode(identifier, content));
         }
+
+        return result;
     }
 }

@@ -13,7 +13,7 @@ public interface ClassesProvider {
     Collection<IdentifiedBytecode> getClass(ClassIdentifier... names);
 
     /**
-     * Warning, may include lambdas and will include inner classes with $notations
+     * Warning, may include lambdas and will include inner classes with $notations.
      * Intentionally not using ClassIdentifier, but may change to it
      *
      * @return all fully qualified classes visible from classpath

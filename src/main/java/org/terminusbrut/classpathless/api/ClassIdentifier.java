@@ -10,15 +10,15 @@ import java.util.Objects;
  */
 public class ClassIdentifier {
     private final String fullName;
-    
+
     public ClassIdentifier(String fullName) {
         this.fullName = fullName;
     }
-    
+
     public String getFullName() {
         return fullName;
     }
-    
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -26,12 +26,12 @@ public class ClassIdentifier {
         ClassIdentifier that = (ClassIdentifier) o;
         return Objects.equals(fullName, that.fullName);
     }
-    
+
     @Override
     public int hashCode() {
         return fullName.hashCode();
     }
-    
+
     @Override
     public String toString() {
         return fullName;

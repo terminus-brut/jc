@@ -15,13 +15,21 @@
  */
 package org.terminusbrut.classpathless;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
+import org.terminusbrut.classpathless.api.ClassIdentifier;
+import org.terminusbrut.classpathless.api.IdentifiedSource;
 import org.terminusbrut.classpathless.impl.Compiler;
 import org.terminusbrut.classpathless.impl.InMemoryJavaSourceFileObject;
+import org.terminusbrut.classpathless.impl.JavaSourcePackageNameReader;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -31,17 +39,17 @@ import com.beust.jcommander.Parameter;
  */
 public class Tool {
     static class Arguments {
-        @Parameter(names = {"-h", "--help"}, help = true, description =
-                "Display help.")
+        @Parameter(names = {"-h", "--help"}, help = true,
+                description = "Display help.")
         boolean help = false;
 
-        @Parameter(names = {"-cp", "--classpath"})
+        @Parameter(names = {"-cp", "-classpath"}, description = "Classpath")
         String classpath = null;
 
-        @Parameter(names = {"-i", "--inputs"}, required = true)
+        @Parameter(description = "Input files", required = true, variableArity = true)
         List<String> inputs = new ArrayList<>();
 
-        @Parameter(names = {"-o", "--outdir"})
+        @Parameter(names = {"-d"}, description = "Output directory")
         String output = ".";
     }
 
@@ -55,12 +63,54 @@ public class Tool {
             return;
         }
 
-        var compiler = new Compiler(arguments.classpath);
+        var ccp = new ClasspathClassesProvider(arguments.classpath);
 
-        for (final var inputFile : arguments.inputs) {
-            compiler.add(new InMemoryJavaSourceFileObject(Paths.get(inputFile)));
+        var compiler = new Compiler();
+
+        var sources = new IdentifiedSource[arguments.inputs.size()];
+
+        for (int i = 0; i != arguments.inputs.size(); ++i) {
+            final var inputFile = arguments.inputs.get(i);
+
+            var sourceObject = new InMemoryJavaSourceFileObject(Paths.get(inputFile));
+
+            String fullyQualifiedName;
+            try (var fis = new FileInputStream(inputFile)) {
+                fullyQualifiedName = new JavaSourcePackageNameReader(fis).readSourcePackage();
+            }
+
+            {
+                var className = Paths.get(inputFile).getFileName().toString();
+                /// Remove ".java"
+                className = className.substring(0, className.length() - 5);
+                if (fullyQualifiedName == null) {
+                    fullyQualifiedName = className;
+                } else {
+                    fullyQualifiedName += "." + className;
+                }
+            }
+
+            var sourceIdentifier = new ClassIdentifier(fullyQualifiedName);
+
+            var content = sourceObject.getCharContent(true).toString().getBytes("utf-8");
+
+            System.out.println(sourceIdentifier.getFullName());
+            System.out.println(content);
+            sources[i] = new IdentifiedSource(sourceIdentifier, content, Optional.empty());
         }
 
-        compiler.compile(Paths.get(arguments.output));
+        for (var result : compiler.compileClass(ccp, Optional.empty(), sources)) {
+            var outPath = Paths.get(arguments.output).resolve(
+                    Paths.get("./" + result.getClassIdentifier().getFullName()
+                            .replace(".", File.separator) + ".class"));
+            Files.createDirectories(outPath.getParent());
+
+            System.out.print("compile: ");
+            System.out.println(outPath);
+
+            try (var os = new FileOutputStream(outPath.toFile())) {
+                os.write(result.getFile());
+            }
+        }
     }
 }

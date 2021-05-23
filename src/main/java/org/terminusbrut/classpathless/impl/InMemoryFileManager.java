@@ -19,13 +19,11 @@ import java.io.IOException;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
-import java.util.List;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.TreeMap;
 
 import javax.tools.FileObject;
 import javax.tools.JavaFileManager;
@@ -33,27 +31,36 @@ import javax.tools.JavaFileObject;
 import javax.tools.JavaFileObject.Kind;
 import javax.tools.StandardLocation;
 
+import org.terminusbrut.classpathless.api.ClassIdentifier;
+import org.terminusbrut.classpathless.api.ClassesProvider;
+
 /**
  * @author Marián Konček
  */
 public class InMemoryFileManager implements JavaFileManager {
-    static final String CP_SEPARATOR = System.getProperty("path.separator");
-
     private JavaFileManager delegate;
-    private List<InMemoryJavaClassFileObject> classes = new ArrayList<>();
-    public List<String> classpath = Collections.emptyList();
+    private Collection<JavaFileObject> classOutput = null;
+    private ClassesProvider classprovider = null;
 
-    public Collection<InMemoryJavaClassFileObject> classOutputs() {
-        return classes;
+    private ArrayList<InMemoryJavaClassFileObject> classes = new ArrayList<>();
+    private TreeMap<String, InMemoryJavaClassFileObject> nameToBytecode = new TreeMap<>();
+
+    void setClassOutput(Collection<JavaFileObject> classOutput) {
+        this.classOutput = classOutput;
     }
 
-    public InMemoryFileManager(JavaFileManager delegate, String classpath) {
+    void setClassProvider(ClassesProvider classprovider) {
+        this.classprovider = classprovider;
+    }
+
+    void clear() {
+        classes.clear();
+        nameToBytecode.clear();
+    }
+
+    public InMemoryFileManager(JavaFileManager delegate) {
         super();
         this.delegate = delegate;
-
-        if (classpath != null) {
-            this.classpath = Arrays.asList(classpath.split(CP_SEPARATOR));
-        }
     }
 
     @Override
@@ -106,6 +113,7 @@ public class InMemoryFileManager implements JavaFileManager {
     public void flush() throws IOException {
         System.out.println(DebugPrinter.fromStack());
         delegate.flush();
+        classOutput.addAll(classes);
     }
 
     @Override
@@ -122,9 +130,9 @@ public class InMemoryFileManager implements JavaFileManager {
 
     @Override
     public ClassLoader getClassLoader(Location location) {
+        System.err.println(DebugPrinter.fromStack(location));
         return (ClassLoader)AccessController.doPrivileged(new PrivilegedAction() {
             public Object run() {
-                System.err.println(DebugPrinter.fromStack(location));
                 return new DelegatingClassLoader(delegate.getClassLoader(location));
             }
         });
@@ -157,9 +165,9 @@ public class InMemoryFileManager implements JavaFileManager {
         System.err.println(DebugPrinter.fromStack(location, className, kind, sibling));
 
         if (kind == Kind.CLASS && location == StandardLocation.CLASS_OUTPUT) {
-            final var result = new InMemoryJavaClassFileObject(
-                    sibling.getName().substring(1)
-                    );
+            System.out.println(sibling.getName());
+            System.out.println(className);
+            final var result = new InMemoryJavaClassFileObject(className);
             classes.add(result);
 
             System.out.println("\t" + classes.size());
@@ -191,21 +199,28 @@ public class InMemoryFileManager implements JavaFileManager {
     @Override
     public Iterable<JavaFileObject> list(Location location, String packageName,
             Set<Kind> kinds, boolean recurse) throws IOException {
-        System.err.print(DebugPrinter.fromStack(location, packageName, kinds, recurse));
-        var result = delegate.list(location, packageName, kinds, recurse);
-        System.err.print(", returning: ");
-        System.err.println(result);
-
-        /*
         if (location.equals(StandardLocation.CLASS_PATH) || location.equals(StandardLocation.SOURCE_PATH)) {
-
             var result = new ArrayList<JavaFileObject>();
-            result.add(new InMemoryJavaClassFileObject("asd"));
+            var found = classprovider.getClass(new ClassIdentifier(packageName));
+            if (!found.isEmpty() ) {
+                for (var identified : found) {
+                    var classObject = new InMemoryJavaClassFileObject(packageName);
+                    classObject.openOutputStream().write(identified.getFile());
+                    result.add(classObject);
+                    nameToBytecode.put(packageName, classObject);
+                }
+            }
+            System.out.print(DebugPrinter.fromStack(location, packageName, kinds, recurse));
+            System.out.print(", returning: ");
+            System.out.println(result);
+            return result;
+        } else {
+            System.err.print(DebugPrinter.fromStack(location, packageName, kinds, recurse));
+            var result = delegate.list(location, packageName, kinds, recurse);
+            System.err.print(", returning: ");
+            System.err.println(result);
             return result;
         }
-         */
-
-        return result;
     }
 
     @Override

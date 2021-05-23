@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
  */
 public class JavaSourcePackageNameReader {
     public static final Pattern packagePattern = Pattern.compile(
-            "package\\s+([^\\.]+[a-zA-Z0-9\\.\\s]*);");
+            "package\\s+([^;]*);");
 
     private BufferedReader br;
 
@@ -68,7 +68,6 @@ public class JavaSourcePackageNameReader {
             }
 
             while (pos < line.length()) {
-                System.out.println(pos);
                 var lineCommentStart = line.indexOf("//", pos);
                 var blockCommentStart = line.indexOf("/*", pos);
 
@@ -136,7 +135,12 @@ public class JavaSourcePackageNameReader {
 
         br.close();
 
-        text.delete(text.indexOf("@"), text.length());
+        {
+            var ampersandPos = text.indexOf("@");
+            if (ampersandPos != -1) {
+                text.delete(ampersandPos, text.length());
+            }
+        }
 
         var textString = text.toString();
 
@@ -144,7 +148,7 @@ public class JavaSourcePackageNameReader {
 
         if (matcher.find()) {
             textString = matcher.group(1);
-            textString = textString.replaceAll("\s", "");
+            textString = textString.replaceAll("\\s", "");
         } else {
             textString = null;
         }
