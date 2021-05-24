@@ -234,9 +234,6 @@ public class InMemoryFileManager implements JavaFileManager {
                 if (!found.isEmpty()) {
                     for (var identified : found) {
                         var classObject = new InMemoryJavaClassFileObject(availableClassName);
-                        System.out.println("\t" + availableClassName);
-                        System.out.println("\t" + classObject.getName());
-                        System.out.println("\t" + classObject.toUri().toString());
                         classObject.openOutputStream().write(identified.getFile());
                         result.add(classObject);
                         nameToBytecode.put(availableClassName, classObject);

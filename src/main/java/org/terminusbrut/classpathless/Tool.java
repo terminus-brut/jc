@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -80,22 +81,25 @@ public class Tool {
             }
 
             {
-                var className = Paths.get(inputFile).getFileName().toString();
-                /// Remove ".java"
-                className = className.substring(0, className.length() - 5);
-                if (fullyQualifiedName == null) {
-                    fullyQualifiedName = className;
+                var classPath = Paths.get(inputFile).getFileName();
+                if (classPath != null) {
+                    var className = classPath.toString();
+                    /// Remove ".java"
+                    className = className.substring(0, className.length() - 5);
+                    if (fullyQualifiedName == null) {
+                        fullyQualifiedName = className;
+                    } else {
+                        fullyQualifiedName += "." + className;
+                    }
                 } else {
-                    fullyQualifiedName += "." + className;
+                    throw new IllegalStateException();
                 }
             }
 
             var sourceIdentifier = new ClassIdentifier(fullyQualifiedName);
 
-            var content = sourceObject.getCharContent(true).toString().getBytes("utf-8");
+            var content = sourceObject.getCharContent(true).toString().getBytes(StandardCharsets.UTF_8);
 
-            System.out.println(sourceIdentifier.getFullName());
-            System.out.println(content);
             sources[i] = new IdentifiedSource(sourceIdentifier, content, Optional.empty());
         }
 
@@ -104,11 +108,12 @@ public class Tool {
                     Paths.get("./" + result.getClassIdentifier().getFullName()
                             .replace(".", File.separator) + ".class"));
 
-            System.out.println(result.getClassIdentifier().getFullName());
-            Files.createDirectories(outPath.getParent());
+            var parent = outPath.getParent();
+            if (parent == null) {
+                throw new IllegalStateException();
+            }
 
-            System.out.print("compile: ");
-            System.out.println(outPath);
+            Files.createDirectories(parent);
 
             try (var os = new FileOutputStream(outPath.toFile())) {
                 os.write(result.getFile());

@@ -135,12 +135,12 @@ public class ClasspathClassesProvider implements ClassesProvider {
         return result;
     }
 
+    /// TODO make this into a test case
+    /*
     public static void main(String[] args) {
-        /*
         System.out.println(obtainClasspath("/usr/lib/java"));
         System.out.println(obtainClasspath("/usr/lib/java/*"));
         System.out.println(obtainClasspath("/usr/lib/java/*:/home/mkoncek/Upstream/classpathless-compiler/target/classes/org/terminusbrut/classpathless/impl/"));
-         */
         var ccp = new ClasspathClassesProvider(".:target/classes/");
         ccp.getClass(new ClassIdentifier("InMemoryFileManager$1.class"));
         System.out.println(ccp.classesToClassFilePaths);
@@ -149,4 +149,5 @@ public class ClasspathClassesProvider implements ClassesProvider {
         }
         System.out.println(ccp.getClassPathListing());
     }
+     */
 }

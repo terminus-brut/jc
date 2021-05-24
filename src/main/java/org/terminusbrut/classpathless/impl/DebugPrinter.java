@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
  * @author Marián Konček
  */
 public class DebugPrinter {
-    public static String Args(Object... args) {
+    public static String args(Object... args) {
         return "(" + Arrays.<Object>asList(args).stream()
                 .map(o -> o == null ? "<null>" : o.toString())
                 .collect(Collectors.joining(", ")) + ")";
@@ -31,6 +31,6 @@ public class DebugPrinter {
     public static String fromStack(Object... args) {
         var name = Thread.currentThread().getStackTrace()[2].toString();
         name = name.substring(0, name.indexOf('('));
-        return name + Args(args);
+        return name + args(args);
     }
 }

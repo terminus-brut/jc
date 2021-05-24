@@ -19,6 +19,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
 
 /**
@@ -40,7 +41,7 @@ public class JavaSourcePackageNameReader {
     private BufferedReader br;
 
     public JavaSourcePackageNameReader(InputStream is) {
-        this.br = new BufferedReader(new InputStreamReader(is));
+        this.br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
     }
 
     static class ReadLineResult {
@@ -119,7 +120,12 @@ public class JavaSourcePackageNameReader {
 
         boolean insideComment = false;
         while (br.ready()) {
-            var result = new ReadLineResult(br.readLine(), insideComment);
+            var line = br.readLine();
+            if (line == null) {
+                break;
+            }
+
+            var result = new ReadLineResult(line, insideComment);
             insideComment = result.insideComment;
 
             var bracketPos = result.line.indexOf('{');
