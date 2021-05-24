@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeMap;
 
 import javax.tools.FileObject;
@@ -41,6 +42,7 @@ public class InMemoryFileManager implements JavaFileManager {
     private JavaFileManager delegate;
     private Collection<JavaFileObject> classOutput = null;
     private ClassesProvider classprovider = null;
+    private SortedSet<String> availableClasses = null;
 
     private ArrayList<InMemoryJavaClassFileObject> classes = new ArrayList<>();
     private TreeMap<String, InMemoryJavaClassFileObject> nameToBytecode = new TreeMap<>();
@@ -53,9 +55,14 @@ public class InMemoryFileManager implements JavaFileManager {
         this.classprovider = classprovider;
     }
 
+    void setAvailableClasses(SortedSet<String> availableClasses) {
+        this.availableClasses = availableClasses;
+    }
+
     void clear() {
         classes.clear();
         nameToBytecode.clear();
+        availableClasses.clear();
     }
 
     public InMemoryFileManager(JavaFileManager delegate) {
@@ -189,6 +196,16 @@ public class InMemoryFileManager implements JavaFileManager {
 
     @Override
     public String inferBinaryName(Location location, JavaFileObject file) {
+        if (file instanceof InMemoryJavaClassFileObject) {
+            System.err.print(DebugPrinter.fromStack(location, file));
+            var realFile = (InMemoryJavaClassFileObject) file;
+            var result = realFile.toUri().toString();
+            /// Remove "class:///"
+            result = result.substring(9, result.length());
+            System.err.print(", returning: ");
+            System.err.println(result);
+            return result;
+        }
         System.err.print(DebugPrinter.fromStack(location, file));
         var result = delegate.inferBinaryName(location, file);
         System.err.print(", returning: ");
@@ -201,15 +218,32 @@ public class InMemoryFileManager implements JavaFileManager {
             Set<Kind> kinds, boolean recurse) throws IOException {
         if (location.equals(StandardLocation.CLASS_PATH) || location.equals(StandardLocation.SOURCE_PATH)) {
             var result = new ArrayList<JavaFileObject>();
-            var found = classprovider.getClass(new ClassIdentifier(packageName));
-            if (!found.isEmpty() ) {
-                for (var identified : found) {
-                    var classObject = new InMemoryJavaClassFileObject(packageName);
-                    classObject.openOutputStream().write(identified.getFile());
-                    result.add(classObject);
-                    nameToBytecode.put(packageName, classObject);
+
+            for (var availableClassName : availableClasses.tailSet(packageName)) {
+                if (!availableClassName.startsWith(packageName)) {
+                    break;
+                }
+
+                /// Remove package name + "."
+                var shortName = availableClassName.substring(packageName.length() + 1);
+                if (!recurse && shortName.contains(".")) {
+                    continue;
+                }
+
+                var found = classprovider.getClass(new ClassIdentifier(availableClassName));
+                if (!found.isEmpty()) {
+                    for (var identified : found) {
+                        var classObject = new InMemoryJavaClassFileObject(availableClassName);
+                        System.out.println("\t" + availableClassName);
+                        System.out.println("\t" + classObject.getName());
+                        System.out.println("\t" + classObject.toUri().toString());
+                        classObject.openOutputStream().write(identified.getFile());
+                        result.add(classObject);
+                        nameToBytecode.put(availableClassName, classObject);
+                    }
                 }
             }
+
             System.out.print(DebugPrinter.fromStack(location, packageName, kinds, recurse));
             System.out.print(", returning: ");
             System.out.println(result);

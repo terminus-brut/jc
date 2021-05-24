@@ -120,7 +120,6 @@ public class ClasspathClassesProvider implements ClassesProvider {
                     Files.walk(root_path).filter(p -> !Files.isDirectory(p) &&
                             p.toString().endsWith(".class"))
                     .forEach(p -> {
-                        /// TODO inner classes $ -> .
                         var relativeString = root_path.relativize(p).toString();
                         relativeString = relativeString.substring(0, relativeString.length() - 6)
                                 .replace(File.separator, ".");

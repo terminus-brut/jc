@@ -103,6 +103,8 @@ public class Tool {
             var outPath = Paths.get(arguments.output).resolve(
                     Paths.get("./" + result.getClassIdentifier().getFullName()
                             .replace(".", File.separator) + ".class"));
+
+            System.out.println(result.getClassIdentifier().getFullName());
             Files.createDirectories(outPath.getParent());
 
             System.out.print("compile: ");

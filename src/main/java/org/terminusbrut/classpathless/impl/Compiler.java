@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import javax.tools.Diagnostic;
@@ -39,8 +40,8 @@ import org.terminusbrut.classpathless.api.InMemoryCompiler;
 import org.terminusbrut.classpathless.api.MessagesListener;
 
 public class Compiler implements InMemoryCompiler {
-    final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-    final InMemoryFileManager fileManager;
+    JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+    InMemoryFileManager fileManager;
 
     /// TODO hook this up to @param messagesConsummer
     private DiagnosticListener<JavaFileObject> diagnostics = new DiagnosticListener<>() {
@@ -88,8 +89,7 @@ public class Compiler implements InMemoryCompiler {
                 /// that ends with the proper Java source file name and extension
                 /// otherwise the compiler throws an error
                 var sourceName = source.getClassIdentifier().getFullName();
-                sourceName = sourceName.substring(
-                        sourceName.lastIndexOf('.') + 1, sourceName.length()) + ".java";
+                sourceName = sourceName.replace(".", "/") + ".java";
 
                 compilationUnits.add(new InMemoryJavaSourceFileObject(
                         sourceName, source.getSourceCode()));
@@ -101,6 +101,7 @@ public class Compiler implements InMemoryCompiler {
         var classOutputs = new ArrayList<JavaFileObject>();
         fileManager.setClassOutput(classOutputs);
         fileManager.setClassProvider(classprovider);
+        fileManager.setAvailableClasses(new TreeSet<>(classprovider.getClassPathListing()));
 
         while (!compiler.getTask(
                 null,
@@ -131,7 +132,9 @@ public class Compiler implements InMemoryCompiler {
             var shortName = classOutput.getName();
             shortName = shortName.substring(0, shortName.length() - 5);
              */
+            System.out.println("##########");
             System.out.println(classOutput.toUri());
+            System.out.println(classOutput.getName());
             var identifier = new ClassIdentifier(classOutput.getName());
             byte[] content;
             try {
