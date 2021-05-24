@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.TreeSet;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import javax.tools.Diagnostic;
@@ -43,8 +44,13 @@ public class Compiler implements InMemoryCompiler {
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     InMemoryFileManager fileManager;
 
-    /// TODO hook this up to @param messagesConsummer
-    private DiagnosticListener<JavaFileObject> diagnostics = new DiagnosticListener<>() {
+    private class DiagnosticToMessagesListener implements DiagnosticListener<JavaFileObject> {
+        MessagesListener listener;
+
+        DiagnosticToMessagesListener(MessagesListener listener) {
+            this.listener = listener;
+        }
+
         @Override
         public void report(Diagnostic<? extends JavaFileObject> diagnostic) {
             var msg = diagnostic.getMessage(Locale.ENGLISH);
@@ -52,6 +58,10 @@ public class Compiler implements InMemoryCompiler {
 
             System.err.println("DiagnosticListener reporting: " + msg + ", " + diagnostic.getCode());
             System.err.println("DiagnosticListener: \"" + diagnostic.getCode() + "\"");
+
+            if (listener != null) {
+                listener.addMessage(Level.SEVERE, msg);
+            }
 
             if (diagnostic.getCode().equals("compiler.err.doesnt.exist")) {
                 if (msg.startsWith(beginText)) {
@@ -102,10 +112,12 @@ public class Compiler implements InMemoryCompiler {
         fileManager.setClassProvider(classprovider);
         fileManager.setAvailableClasses(new TreeSet<>(classprovider.getClassPathListing()));
 
+        var listener = new DiagnosticToMessagesListener(messagesConsummer.orElse(null));
+
         while (!compiler.getTask(
                 null,
                 fileManager,
-                diagnostics,
+                listener,
                 null,
                 null,
                 compilationUnits)

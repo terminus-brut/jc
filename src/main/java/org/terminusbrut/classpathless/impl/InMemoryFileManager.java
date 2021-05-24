@@ -201,10 +201,7 @@ public class InMemoryFileManager implements JavaFileManager {
             System.err.println(result);
             return result;
         }
-        System.err.print(DebugPrinter.fromStack(location, file));
         var result = delegate.inferBinaryName(location, file);
-        System.err.print(", returning: ");
-        System.err.println(result);
         return result;
     }
 
@@ -241,10 +238,7 @@ public class InMemoryFileManager implements JavaFileManager {
             System.out.println(result);
             return result;
         } else {
-            System.err.print(DebugPrinter.fromStack(location, packageName, kinds, recurse));
             var result = delegate.list(location, packageName, kinds, recurse);
-            System.err.print(", returning: ");
-            System.err.println(result);
             return result;
         }
     }
