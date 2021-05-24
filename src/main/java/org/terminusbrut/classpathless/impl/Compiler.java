@@ -99,7 +99,6 @@ public class Compiler implements InMemoryCompiler {
         }
 
         var classOutputs = new ArrayList<JavaFileObject>();
-        fileManager.setClassOutput(classOutputs);
         fileManager.setClassProvider(classprovider);
         fileManager.setAvailableClasses(new TreeSet<>(classprovider.getClassPathListing()));
 
@@ -120,22 +119,18 @@ public class Compiler implements InMemoryCompiler {
             }
         }
 
-        fileManager.setClassOutput(null);
         fileManager.setClassProvider(null);
-        fileManager.clear();
+        fileManager.clearAndGetOutput(classOutputs);
 
         var result = new ArrayList<IdentifiedBytecode>();
 
         for (final var classOutput : classOutputs) {
-            /*
-            /// Remove ".java"
-            var shortName = classOutput.getName();
-            shortName = shortName.substring(0, shortName.length() - 5);
-             */
+            System.out.println(classOutput);
             System.out.println("##########");
             System.out.println(classOutput.toUri());
             System.out.println(classOutput.getName());
-            var identifier = new ClassIdentifier(classOutput.getName());
+            /// Remove the leading "/"
+            var identifier = new ClassIdentifier(classOutput.getName().substring(1));
             byte[] content;
             try {
                 content = classOutput.openInputStream().readAllBytes();
@@ -144,6 +139,8 @@ public class Compiler implements InMemoryCompiler {
             }
             result.add(new IdentifiedBytecode(identifier, content));
         }
+
+        System.out.println(result);
 
         return result;
     }

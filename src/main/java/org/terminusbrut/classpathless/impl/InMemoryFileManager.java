@@ -40,16 +40,11 @@ import org.terminusbrut.classpathless.api.ClassesProvider;
  */
 public class InMemoryFileManager implements JavaFileManager {
     private JavaFileManager delegate;
-    private Collection<JavaFileObject> classOutput = null;
     private ClassesProvider classprovider = null;
     private SortedSet<String> availableClasses = null;
 
     private ArrayList<InMemoryJavaClassFileObject> classes = new ArrayList<>();
     private TreeMap<String, InMemoryJavaClassFileObject> nameToBytecode = new TreeMap<>();
-
-    void setClassOutput(Collection<JavaFileObject> classOutput) {
-        this.classOutput = classOutput;
-    }
 
     void setClassProvider(ClassesProvider classprovider) {
         this.classprovider = classprovider;
@@ -59,7 +54,8 @@ public class InMemoryFileManager implements JavaFileManager {
         this.availableClasses = availableClasses;
     }
 
-    void clear() {
+    void clearAndGetOutput(Collection<JavaFileObject> classOutput) {
+        classOutput.addAll(classes);
         classes.clear();
         nameToBytecode.clear();
         availableClasses.clear();
@@ -120,7 +116,6 @@ public class InMemoryFileManager implements JavaFileManager {
     public void flush() throws IOException {
         System.out.println(DebugPrinter.fromStack());
         delegate.flush();
-        classOutput.addAll(classes);
     }
 
     @Override
