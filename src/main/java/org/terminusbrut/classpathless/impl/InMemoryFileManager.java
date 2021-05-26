@@ -69,70 +69,70 @@ public class InMemoryFileManager implements JavaFileManager {
     @Override
     public Location getLocationForModule(Location location, String moduleName)
             throws IOException {
-        System.err.println(DebugPrinter.fromStack(location, moduleName));
+        Compiler.verbose.println(DebugPrinter.fromStack(location, moduleName));
         return delegate.getLocationForModule(location, moduleName);
     }
 
     @Override
     public Location getLocationForModule(Location location, JavaFileObject fo)
             throws IOException {
-        System.err.println(DebugPrinter.fromStack(location, fo));
+        Compiler.verbose.println(DebugPrinter.fromStack(location, fo));
         return delegate.getLocationForModule(location, fo);
     }
 
     @Override
     public <S> ServiceLoader<S> getServiceLoader(Location location, Class<S> service)
             throws IOException {
-        System.err.println(DebugPrinter.fromStack(location, service));
+        Compiler.verbose.println(DebugPrinter.fromStack(location, service));
         return delegate.getServiceLoader(location, service);
     }
 
     @Override
     public String inferModuleName(Location location) throws IOException {
-        System.err.println(DebugPrinter.fromStack(location));
+        Compiler.verbose.println(DebugPrinter.fromStack(location));
         return delegate.inferModuleName(location);
     }
 
     @Override
     public Iterable<Set<Location>> listLocationsForModules(Location location)
             throws IOException {
-        System.err.println(DebugPrinter.fromStack(location));
+        Compiler.verbose.println(DebugPrinter.fromStack(location));
         return delegate.listLocationsForModules(location);
     }
 
     @Override
     public boolean contains(Location location, FileObject fo) throws IOException {
-        System.err.println(DebugPrinter.fromStack(location, fo));
+        Compiler.verbose.println(DebugPrinter.fromStack(location, fo));
         return delegate.contains(location, fo);
     }
 
     @Override
     public void close() throws IOException {
-        System.err.println(DebugPrinter.fromStack());
+        Compiler.verbose.println(DebugPrinter.fromStack());
         delegate.close();
     }
 
     @Override
     public void flush() throws IOException {
-        System.out.println(DebugPrinter.fromStack());
+        Compiler.verbose.println(DebugPrinter.fromStack());
         delegate.flush();
     }
 
     @Override
     public int isSupportedOption(String option) {
-        System.err.println(DebugPrinter.fromStack(option));
+        Compiler.verbose.println(DebugPrinter.fromStack(option));
         return delegate.isSupportedOption(option);
     }
 
     @Override
     public boolean isSameFile(FileObject a, FileObject b) {
-        System.err.println(DebugPrinter.fromStack(a, b));
+        Compiler.verbose.println(DebugPrinter.fromStack(a, b));
         return delegate.isSameFile(a, b);
     }
 
     @Override
     public ClassLoader getClassLoader(Location location) {
-        System.err.println(DebugPrinter.fromStack(location));
+        Compiler.verbose.println(DebugPrinter.fromStack(location));
         return (ClassLoader)AccessController.doPrivileged(new PrivilegedAction() {
             public Object run() {
                 return new DelegatingClassLoader(delegate.getClassLoader(location));
@@ -143,36 +143,36 @@ public class InMemoryFileManager implements JavaFileManager {
     @Override
     public FileObject getFileForInput(Location location, String packageName,
             String relativeName) throws IOException {
-        System.err.println(DebugPrinter.fromStack(location, packageName, relativeName));
+        Compiler.verbose.println(DebugPrinter.fromStack(location, packageName, relativeName));
         return delegate.getFileForInput(location, packageName, relativeName);
     }
 
     @Override
     public FileObject getFileForOutput(Location location, String packageName,
             String relativeName, FileObject sibling) throws IOException {
-        System.err.println(DebugPrinter.fromStack(packageName, relativeName, sibling));
+        Compiler.verbose.println(DebugPrinter.fromStack(packageName, relativeName, sibling));
         return delegate.getFileForOutput(location, packageName, relativeName, sibling);
     }
 
     @Override
     public JavaFileObject getJavaFileForInput(Location location,
             String className, Kind kind) throws IOException {
-        System.err.println(DebugPrinter.fromStack(location, className, kind));
+        Compiler.verbose.println(DebugPrinter.fromStack(location, className, kind));
         return delegate.getJavaFileForInput(location, className, kind);
     }
 
     @Override
     public JavaFileObject getJavaFileForOutput(Location location,
             String className, Kind kind, FileObject sibling) throws IOException {
-        System.err.println(DebugPrinter.fromStack(location, className, kind, sibling));
+        Compiler.verbose.println(DebugPrinter.fromStack(location, className, kind, sibling));
 
         if (kind == Kind.CLASS && location == StandardLocation.CLASS_OUTPUT) {
-            System.out.println(sibling.getName());
-            System.out.println(className);
+            Compiler.verbose.println(sibling.getName());
+            Compiler.verbose.println(className);
             final var result = new InMemoryJavaClassFileObject(className);
             classes.add(result);
 
-            System.out.println("\t" + classes.size());
+            Compiler.verbose.println("\t" + classes.size());
 
             return result;
         } else {
@@ -182,23 +182,23 @@ public class InMemoryFileManager implements JavaFileManager {
 
     @Override
     public boolean hasLocation(Location location) {
-        System.err.print(DebugPrinter.fromStack(location));
+        Compiler.verbose.print(DebugPrinter.fromStack(location));
         var result = delegate.hasLocation(location);
-        System.err.print(", returning: ");
-        System.err.println(result);
+        Compiler.verbose.print(", returning: ");
+        Compiler.verbose.println(result);
         return result;
     }
 
     @Override
     public String inferBinaryName(Location location, JavaFileObject file) {
         if (file instanceof InMemoryJavaClassFileObject) {
-            System.err.print(DebugPrinter.fromStack(location, file));
+            Compiler.verbose.print(DebugPrinter.fromStack(location, file));
             var realFile = (InMemoryJavaClassFileObject) file;
             var result = realFile.toUri().toString();
             /// Remove "class:///"
             result = result.substring(9, result.length());
-            System.err.print(", returning: ");
-            System.err.println(result);
+            Compiler.verbose.print(", returning: ");
+            Compiler.verbose.println(result);
             return result;
         }
         var result = delegate.inferBinaryName(location, file);
@@ -233,9 +233,9 @@ public class InMemoryFileManager implements JavaFileManager {
                 }
             }
 
-            System.out.print(DebugPrinter.fromStack(location, packageName, kinds, recurse));
-            System.out.print(", returning: ");
-            System.out.println(result);
+            Compiler.verbose.print(DebugPrinter.fromStack(location, packageName, kinds, recurse));
+            Compiler.verbose.print(", returning: ");
+            Compiler.verbose.println(result);
             return result;
         } else {
             var result = delegate.list(location, packageName, kinds, recurse);
@@ -245,7 +245,7 @@ public class InMemoryFileManager implements JavaFileManager {
 
     @Override
     public boolean handleOption(String current, Iterator<String> remaining) {
-        System.err.println(DebugPrinter.fromStack(current, remaining));
+        Compiler.verbose.println(DebugPrinter.fromStack(current, remaining));
         return delegate.handleOption(current, remaining);
     }
 }

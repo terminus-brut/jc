@@ -55,7 +55,6 @@ public class ClasspathClassesProvider implements ClassesProvider {
         var result = new ArrayList<IdentifiedBytecode>();
 
         for (var indentifier : names) {
-            System.out.println(indentifier.getFullName());
             var pathOfClass = classesToClassFilePaths.get(indentifier.getFullName());
 
             if (pathOfClass != null) {
@@ -123,7 +122,6 @@ public class ClasspathClassesProvider implements ClassesProvider {
                         var relativeString = root_path.relativize(p).toString();
                         relativeString = relativeString.substring(0, relativeString.length() - 6)
                                 .replace(File.separator, ".");
-                        System.out.println(relativeString);
                         result.put(relativeString, p);
                     });
                 } catch (IOException ex) {

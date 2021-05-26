@@ -16,8 +16,13 @@
 package org.terminusbrut.classpathless.impl;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.UncheckedIOException;
 import java.io.UnsupportedEncodingException;
+import java.net.Inet4Address;
+import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -33,6 +38,7 @@ import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.ToolProvider;
 
+import org.apache.commons.io.output.NullPrintStream;
 import org.terminusbrut.classpathless.api.ClassIdentifier;
 import org.terminusbrut.classpathless.api.ClassesProvider;
 import org.terminusbrut.classpathless.api.IdentifiedBytecode;
@@ -41,6 +47,39 @@ import org.terminusbrut.classpathless.api.InMemoryCompiler;
 import org.terminusbrut.classpathless.api.MessagesListener;
 
 public class Compiler implements InMemoryCompiler {
+    public static final Socket verboseSocket;
+    public static final PrintStream verbose;
+
+    static {
+        Socket tempVerboseSocket = null;
+        PrintStream tempVerbose = null;
+
+        try {
+            tempVerboseSocket = new Socket(Inet4Address.getLocalHost(), 12345);
+            tempVerbose = new PrintStream(tempVerboseSocket.getOutputStream(), true, StandardCharsets.UTF_8);
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                public void run() {
+                    if (verboseSocket != null) {
+                        try {
+                            verbose.close();
+                            verboseSocket.close();
+                        } catch (IOException ex) {
+                        }
+                    }
+                }
+            });
+        } catch (IOException ex) {
+        }
+
+        if (tempVerbose != null) {
+            verboseSocket = tempVerboseSocket;
+            verbose = tempVerbose;
+        } else {
+            verboseSocket = null;
+            verbose = new NullPrintStream();
+        }
+    }
+
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     InMemoryFileManager fileManager;
 
@@ -56,11 +95,9 @@ public class Compiler implements InMemoryCompiler {
             var msg = diagnostic.getMessage(Locale.ENGLISH);
             final var beginText = "package ";
 
-            System.err.println("DiagnosticListener reporting: " + msg + ", " + diagnostic.getCode());
-            System.err.println("DiagnosticListener: \"" + diagnostic.getCode() + "\"");
-
             if (listener != null) {
-                listener.addMessage(Level.SEVERE, msg);
+                listener.addMessage(Level.SEVERE, MessageFormat.format("[{0}, {1}]: {2}",
+                        diagnostic.getLineNumber(), diagnostic.getColumnNumber(), msg));
             }
 
             if (diagnostic.getCode().equals("compiler.err.doesnt.exist")) {
@@ -79,11 +116,6 @@ public class Compiler implements InMemoryCompiler {
     public Compiler() throws IOException {
         this.fileManager = new InMemoryFileManager(
                 compiler.getStandardFileManager(null, null, null));
-        /*
-        System.out.println(tempdir.toString());
-        file_manager.setLocation(StandardLocation.CLASS_OUTPUT,
-                Arrays.asList(tempdir.toFile()));
-         */
     }
 
     @Override
@@ -110,7 +142,11 @@ public class Compiler implements InMemoryCompiler {
 
         var classOutputs = new ArrayList<JavaFileObject>();
         fileManager.setClassProvider(classprovider);
-        fileManager.setAvailableClasses(new TreeSet<>(classprovider.getClassPathListing()));
+
+        var availableClasses = new TreeSet<>(classprovider.getClassPathListing());
+        verbose.println(availableClasses);
+
+        fileManager.setAvailableClasses(availableClasses);
 
         var listener = new DiagnosticToMessagesListener(messagesConsummer.orElse(null));
 
@@ -123,7 +159,7 @@ public class Compiler implements InMemoryCompiler {
                 compilationUnits)
                 .call()) {
             if (!missingDependencies.isEmpty()) {
-                System.err.println("resolving deps: " + missingDependencies.stream()
+                verbose.println("resolving deps: " + missingDependencies.stream()
                 .collect(Collectors.joining(", ")));
                 break;
             } else {
@@ -137,10 +173,6 @@ public class Compiler implements InMemoryCompiler {
         var result = new ArrayList<IdentifiedBytecode>();
 
         for (final var classOutput : classOutputs) {
-            System.out.println(classOutput);
-            System.out.println("##########");
-            System.out.println(classOutput.toUri());
-            System.out.println(classOutput.getName());
             /// Remove the leading "/"
             var identifier = new ClassIdentifier(classOutput.getName().substring(1));
             byte[] content;
@@ -151,8 +183,6 @@ public class Compiler implements InMemoryCompiler {
             }
             result.add(new IdentifiedBytecode(identifier, content));
         }
-
-        System.out.println(result);
 
         return result;
     }
