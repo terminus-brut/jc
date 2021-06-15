@@ -19,15 +19,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Enumeration;
+import java.util.logging.Level;
 import java.util.stream.Stream;
+
+import org.terminusbrut.classpathless.api.MessagesListener;
 
 /**
  * @author Marián Konček
  */
-public class DelegatingClassLoader extends ClassLoader
-{
-    public DelegatingClassLoader(ClassLoader delegate) {
+public class DelegatingClassLoader extends ClassLoader {
+    MessagesListener messagesListener;
+
+    public DelegatingClassLoader(ClassLoader delegate, MessagesListener messagesListener) {
         super("Delegating_" + delegate.getName(), delegate);
+        this.messagesListener = messagesListener;
     }
 
     @Override
@@ -47,122 +52,122 @@ public class DelegatingClassLoader extends ClassLoader
 
     @Override
     public Class<?> loadClass(String name) throws ClassNotFoundException {
-        Compiler.verbose.println(DebugPrinter.fromStack(name));
+        messagesListener.addMessage(Level.FINEST, DebugPrinter.print("loadClass", name));
         return super.loadClass(name);
     }
 
     @Override
     public URL getResource(String name) {
-        Compiler.verbose.println(DebugPrinter.fromStack(name));
+        messagesListener.addMessage(Level.FINEST, DebugPrinter.print("getResource", name));
         return super.getResource(name);
     }
 
     @Override
     public Enumeration<URL> getResources(String name) throws IOException {
-        Compiler.verbose.println(DebugPrinter.fromStack(name));
+        messagesListener.addMessage(Level.FINEST, DebugPrinter.print("getResources", name));
         return super.getResources(name);
     }
 
     @Override
     public Stream<URL> resources(String name) {
-        Compiler.verbose.println(DebugPrinter.fromStack(name));
+        messagesListener.addMessage(Level.FINEST, DebugPrinter.print("resources", name));
         return super.resources(name);
     }
 
     @Override
     public InputStream getResourceAsStream(String name) {
-        Compiler.verbose.println(DebugPrinter.fromStack(name));
+        messagesListener.addMessage(Level.FINEST, DebugPrinter.print("getResourceAsStream", name));
         return super.getResourceAsStream(name);
     }
 
     @Override
     public void setDefaultAssertionStatus(boolean enabled) {
-        Compiler.verbose.println(DebugPrinter.fromStack(enabled));
+        messagesListener.addMessage(Level.FINEST, DebugPrinter.print("setDefaultAssertionStatus", enabled));
         super.setDefaultAssertionStatus(enabled);
     }
 
     @Override
     public void setPackageAssertionStatus(String packageName, boolean enabled) {
-        Compiler.verbose.println(DebugPrinter.fromStack(packageName, enabled));
+        messagesListener.addMessage(Level.FINEST, DebugPrinter.print("setPackageAssertionStatus", packageName, enabled));
         super.setPackageAssertionStatus(packageName, enabled);
     }
 
     @Override
     public void setClassAssertionStatus(String className, boolean enabled) {
-        Compiler.verbose.println(DebugPrinter.fromStack(className, enabled));
+        messagesListener.addMessage(Level.FINEST, DebugPrinter.print("setClassAssertionStatus", className, enabled));
         super.setClassAssertionStatus(className, enabled);
     }
 
     @Override
     public void clearAssertionStatus() {
-        Compiler.verbose.println(DebugPrinter.fromStack());
+        messagesListener.addMessage(Level.FINEST, DebugPrinter.print("clearAssertionStatus"));
         super.clearAssertionStatus();
     }
 
     @Override
     protected Package definePackage(String name, String specTitle, String specVersion, String specVendor,
             String implTitle, String implVersion, String implVendor, URL sealBase) {
-        Compiler.verbose.println(DebugPrinter.fromStack(name, specTitle, specVersion, specVendor, implTitle, implVersion, implVendor, sealBase));
+        messagesListener.addMessage(Level.FINEST, DebugPrinter.print("definePackage", name, specTitle, specVersion, specVendor, implTitle, implVersion, implVendor, sealBase));
         return super.definePackage(name, specTitle, specVersion, specVendor, implTitle, implVersion, implVendor, sealBase);
     }
 
     @Override
     protected Class<?> findClass(String moduleName, String name) {
-        Compiler.verbose.println(DebugPrinter.fromStack(moduleName, name));
+        messagesListener.addMessage(Level.FINEST, DebugPrinter.print("findClass", moduleName, name));
         return super.findClass(moduleName, name);
     }
 
     @Override
     protected Class<?> findClass(String name) throws ClassNotFoundException {
-        Compiler.verbose.println(DebugPrinter.fromStack(name));
+        messagesListener.addMessage(Level.FINEST, DebugPrinter.print("findClass", name));
         return super.findClass(name);
     }
 
     @Override
     protected String findLibrary(String libname) {
-        Compiler.verbose.println(DebugPrinter.fromStack(libname));
+        messagesListener.addMessage(Level.FINEST, DebugPrinter.print("findLibrary", libname));
         return super.findLibrary(libname);
     }
 
     @Override
     protected URL findResource(String moduleName, String name) throws IOException {
-        Compiler.verbose.println(DebugPrinter.fromStack(moduleName, name));
+        messagesListener.addMessage(Level.FINEST, DebugPrinter.print("findResource", moduleName, name));
         return super.findResource(moduleName, name);
     }
 
     @Override
     protected URL findResource(String name) {
-        Compiler.verbose.println(DebugPrinter.fromStack());
+        messagesListener.addMessage(Level.FINEST, DebugPrinter.print("findResource", name));
         return super.findResource(name);
     }
 
     @Override
     protected Enumeration<URL> findResources(String name) throws IOException {
-        Compiler.verbose.println(DebugPrinter.fromStack());
+        messagesListener.addMessage(Level.FINEST, DebugPrinter.print("findResources", name));
         return super.findResources(name);
     }
 
     @Override
     protected Object getClassLoadingLock(String className) {
-        Compiler.verbose.println(DebugPrinter.fromStack());
+        messagesListener.addMessage(Level.FINEST, DebugPrinter.print("getClassLoadingLock", className));
         return super.getClassLoadingLock(className);
     }
 
     @Override
     protected Package getPackage(String name) {
-        Compiler.verbose.println(DebugPrinter.fromStack(name));
+        messagesListener.addMessage(Level.FINEST, DebugPrinter.print("getPackage", name));
         return super.getPackage(name);
     }
 
     @Override
     protected Package[] getPackages() {
-        Compiler.verbose.println(DebugPrinter.fromStack());
+        messagesListener.addMessage(Level.FINEST, DebugPrinter.print("getPackages"));
         return super.getPackages();
     }
 
     @Override
     protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-        Compiler.verbose.println(DebugPrinter.fromStack(name, resolve));
+        messagesListener.addMessage(Level.FINEST, DebugPrinter.print("loadClass", name, resolve));
         return super.loadClass(name, resolve);
     }
 }

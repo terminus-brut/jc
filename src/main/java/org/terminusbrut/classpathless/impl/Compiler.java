@@ -16,12 +16,8 @@
 package org.terminusbrut.classpathless.impl;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.io.UncheckedIOException;
 import java.io.UnsupportedEncodingException;
-import java.net.Inet4Address;
-import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,7 +34,6 @@ import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.ToolProvider;
 
-import org.apache.commons.io.output.NullPrintStream;
 import org.terminusbrut.classpathless.api.ClassIdentifier;
 import org.terminusbrut.classpathless.api.ClassesProvider;
 import org.terminusbrut.classpathless.api.IdentifiedBytecode;
@@ -47,38 +42,14 @@ import org.terminusbrut.classpathless.api.InMemoryCompiler;
 import org.terminusbrut.classpathless.api.MessagesListener;
 
 public class Compiler implements InMemoryCompiler {
-    public static final Socket verboseSocket;
-    public static final PrintStream verbose;
-
-    static {
-        Socket tempVerboseSocket = null;
-        PrintStream tempVerbose = null;
-
-        try {
-            tempVerboseSocket = new Socket(Inet4Address.getLocalHost(), 12345);
-            tempVerbose = new PrintStream(tempVerboseSocket.getOutputStream(), true, StandardCharsets.UTF_8);
-            Runtime.getRuntime().addShutdownHook(new Thread() {
-                public void run() {
-                    if (verboseSocket != null) {
-                        try {
-                            verbose.close();
-                            verboseSocket.close();
-                        } catch (IOException ex) {
-                        }
-                    }
-                }
-            });
-        } catch (IOException ex) {
+    MessagesListener messagesListener = new MessagesListener() {
+        @Override
+        public void addMessage(Level level, String message) {
         }
-
-        if (tempVerbose != null) {
-            verboseSocket = tempVerboseSocket;
-            verbose = tempVerbose;
-        } else {
-            verboseSocket = null;
-            verbose = new NullPrintStream();
+        @Override
+        public void addMessage(Level level, String format, Object... args) {
         }
-    }
+    };
 
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     InMemoryFileManager fileManager;
@@ -96,7 +67,8 @@ public class Compiler implements InMemoryCompiler {
             final var beginText = "package ";
 
             if (listener != null) {
-                listener.addMessage(Level.SEVERE, MessageFormat.format("[{0}, {1}]: {2}",
+                listener.addMessage(Level.SEVERE, MessageFormat.format(
+                        "Compiler diagnostic [{0}, {1}]: {2}",
                         diagnostic.getLineNumber(), diagnostic.getColumnNumber(), msg));
             }
 
@@ -115,7 +87,7 @@ public class Compiler implements InMemoryCompiler {
 
     public Compiler() throws IOException {
         this.fileManager = new InMemoryFileManager(
-                compiler.getStandardFileManager(null, null, null));
+                compiler.getStandardFileManager(null, null, null), messagesListener);
     }
 
     @Override
@@ -144,11 +116,11 @@ public class Compiler implements InMemoryCompiler {
         fileManager.setClassProvider(classprovider);
 
         var availableClasses = new TreeSet<>(classprovider.getClassPathListing());
-        verbose.println(availableClasses);
 
         fileManager.setAvailableClasses(availableClasses);
 
-        var listener = new DiagnosticToMessagesListener(messagesConsummer.orElse(null));
+        messagesConsummer.ifPresent(ml -> {messagesListener = ml;});
+        var listener = new DiagnosticToMessagesListener(messagesListener);
 
         while (!compiler.getTask(
                 null,
@@ -159,8 +131,8 @@ public class Compiler implements InMemoryCompiler {
                 compilationUnits)
                 .call()) {
             if (!missingDependencies.isEmpty()) {
-                verbose.println("resolving deps: " + missingDependencies.stream()
-                .collect(Collectors.joining(", ")));
+                messagesListener.addMessage(Level.INFO, "resolving deps: "
+                        + missingDependencies.stream().collect(Collectors.joining(", ")));
                 break;
             } else {
                 throw new RuntimeException("Could not compile file");

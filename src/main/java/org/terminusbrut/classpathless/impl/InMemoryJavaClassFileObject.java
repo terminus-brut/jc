@@ -38,25 +38,21 @@ public class InMemoryJavaClassFileObject extends SimpleJavaFileObject {
 
     @Override
     public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException {
-        Compiler.verbose.println(DebugPrinter.fromStack(ignoreEncodingErrors));
         return bytes.toString(StandardCharsets.US_ASCII);
     }
 
     @Override
     public InputStream openInputStream() throws IOException {
-        Compiler.verbose.println(DebugPrinter.fromStack());
         return bytes.toInputStream();
     }
 
     @Override
     public OutputStream openOutputStream() throws IOException {
-        Compiler.verbose.println(DebugPrinter.fromStack());
         return bytes;
     }
 
     @Override
     public boolean isNameCompatible(String simpleName, Kind kind) {
-        Compiler.verbose.println(DebugPrinter.fromStack(simpleName, kind));
         return super.isNameCompatible(simpleName, kind);
     }
 }

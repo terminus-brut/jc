@@ -33,4 +33,8 @@ public class DebugPrinter {
         name = name.substring(0, name.indexOf('('));
         return name + args(args);
     }
+
+    public static String print(String function, Object... args) {
+        return function + args(args);
+    }
 }
