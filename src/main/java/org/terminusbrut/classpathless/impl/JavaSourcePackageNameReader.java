@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
  * A simple class to extract package name from an <code>InputStream</code>
  * representing a Java source file.
  *
- * @implNote Reads by lines removing comments until the first "{" symbol (start
+ * Reads by lines removing comments until the first "{" symbol (start
  * of class / interface / enum / ...) declaration. Then removes all the content
  * until the first "@" (annotation). Then searches for the package pattern
  * in the leftover string.
@@ -113,7 +113,7 @@ public class JavaSourcePackageNameReader {
     /**
      * Read the package name.
      * @return Package name or null if none was found.
-     * @throws IOException
+     * @throws IOException If an IO error occurs.
      */
     public String readSourcePackage() throws IOException {
         var text = new StringBuilder();

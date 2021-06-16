@@ -10,7 +10,32 @@
 
   <name>classpathless-compiler</name>
   <description>Java classpathless compiler</description>
-  <url>https://github.com/terminus-brut/jc/</url>
+  <url>https://github.com/mkoncek/classpathless-compiler/</url>
+
+  <licenses>
+    <license>
+      <name>Apache License version 2.0</name>
+      <url>https://github.com/mkoncek/classpathless-compiler/blob/master/LICENSE</url>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <id>mkoncek</id>
+      <name>Marian Koncek</name>
+      <email>mkoncek@redhat.com</email>
+      <organization>Redhat</organization>
+      <organizationUrl>http://www.redhat.com</organizationUrl>
+    </developer>
+
+    <developer>
+      <id>judovana</id>
+      <name>Jiri Vanek</name>
+      <email>jvanek@redhat.com</email>
+      <organization>Redhat</organization>
+      <organizationUrl>http://www.redhat.com</organizationUrl>
+    </developer>
+  </developers>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -60,6 +85,37 @@
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>2.22.1</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.3.0</version>
+        <configuration>
+          <quiet>true</quiet>
+        </configuration>
+        <executions>
+          <execution>
+            <id>attach-javadoc</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>3.2.0</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <artifactId>maven-jar-plugin</artifactId>
