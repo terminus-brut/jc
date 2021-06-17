@@ -6,19 +6,21 @@
   <groupId>org.terminusbrut</groupId>
   <artifactId>classpathless-compiler</artifactId>
   <version>1.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
 
-  <name>classpathless-compiler</name>
+  <name>Classpathless Compiler</name>
   <description>Java classpathless compiler</description>
   <url>https://github.com/mkoncek/classpathless-compiler/</url>
 
   <scm>
+    <url>https://github.com/mkoncek/classpathless-compiler/</url>
     <developerConnection>scm:git:git@github.com:mkoncek/classpathless-compiler.git</developerConnection>
   </scm>
 
   <licenses>
     <license>
-      <name>Apache License version 2.0</name>
-      <url>https://github.com/mkoncek/classpathless-compiler/blob/master/LICENSE</url>
+      <name>Apache Software License, Version 2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0</url>
     </license>
   </licenses>
 
