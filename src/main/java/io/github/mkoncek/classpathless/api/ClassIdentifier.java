@@ -1,4 +1,4 @@
-package org.terminusbrut.classpathless.api;
+package io.github.mkoncek.classpathless.api;
 
 import java.util.Objects;
 

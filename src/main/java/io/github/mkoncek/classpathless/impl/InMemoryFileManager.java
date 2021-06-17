@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.terminusbrut.classpathless.impl;
+package io.github.mkoncek.classpathless.impl;
 
 import java.io.IOException;
 import java.security.AccessController;
@@ -31,11 +31,12 @@ import javax.tools.FileObject;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.JavaFileObject.Kind;
-import javax.tools.StandardLocation;
 
-import org.terminusbrut.classpathless.api.ClassIdentifier;
-import org.terminusbrut.classpathless.api.ClassesProvider;
-import org.terminusbrut.classpathless.api.MessagesListener;
+import io.github.mkoncek.classpathless.api.ClassIdentifier;
+import io.github.mkoncek.classpathless.api.ClassesProvider;
+import io.github.mkoncek.classpathless.api.MessagesListener;
+
+import javax.tools.StandardLocation;
 
 /**
  * @author Marián Konček

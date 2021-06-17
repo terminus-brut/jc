@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.terminusbrut.classpathless.impl;
+package io.github.mkoncek.classpathless.impl;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -34,12 +34,12 @@ import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.ToolProvider;
 
-import org.terminusbrut.classpathless.api.ClassIdentifier;
-import org.terminusbrut.classpathless.api.ClassesProvider;
-import org.terminusbrut.classpathless.api.IdentifiedBytecode;
-import org.terminusbrut.classpathless.api.IdentifiedSource;
-import org.terminusbrut.classpathless.api.InMemoryCompiler;
-import org.terminusbrut.classpathless.api.MessagesListener;
+import io.github.mkoncek.classpathless.api.ClassIdentifier;
+import io.github.mkoncek.classpathless.api.ClassesProvider;
+import io.github.mkoncek.classpathless.api.IdentifiedBytecode;
+import io.github.mkoncek.classpathless.api.IdentifiedSource;
+import io.github.mkoncek.classpathless.api.InMemoryCompiler;
+import io.github.mkoncek.classpathless.api.MessagesListener;
 
 public class Compiler implements InMemoryCompiler {
     MessagesListener messagesListener = new MessagesListener() {

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.terminusbrut.classpathless;
+package io.github.mkoncek.classpathless;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,9 +30,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
-import org.terminusbrut.classpathless.api.ClassIdentifier;
-import org.terminusbrut.classpathless.api.ClassesProvider;
-import org.terminusbrut.classpathless.api.IdentifiedBytecode;
+
+import io.github.mkoncek.classpathless.api.ClassIdentifier;
+import io.github.mkoncek.classpathless.api.ClassesProvider;
+import io.github.mkoncek.classpathless.api.IdentifiedBytecode;
 
 public class ClasspathClassesProvider implements ClassesProvider {
     static final String CP_SEPARATOR = System.getProperty("path.separator");
@@ -142,7 +143,7 @@ public class ClasspathClassesProvider implements ClassesProvider {
         var ccp = new ClasspathClassesProvider(".:target/classes/");
         ccp.getClass(new ClassIdentifier("InMemoryFileManager$1.class"));
         System.out.println(ccp.classesToClassFilePaths);
-        for (var bc : ccp.getClass(new ClassIdentifier("org.terminusbrut.classpathless.impl.Compiler$1"))) {
+        for (var bc : ccp.getClass(new ClassIdentifier("io.github.mkoncek.classpathless.impl.Compiler$1"))) {
             System.out.println(bc.getFile());
         }
         System.out.println(ccp.getClassPathListing());

@@ -1,4 +1,4 @@
-package org.terminusbrut.classpathless.api;
+package io.github.mkoncek.classpathless.api;
 
 /**
  * Compiled bytecode of class with its fully qualified name

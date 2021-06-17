@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.terminusbrut.classpathless.impl;
+package io.github.mkoncek.classpathless.impl;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;

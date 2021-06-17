@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.terminusbrut.classpathless.impl;
+package io.github.mkoncek.classpathless.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,7 +22,7 @@ import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.stream.Stream;
 
-import org.terminusbrut.classpathless.api.MessagesListener;
+import io.github.mkoncek.classpathless.api.MessagesListener;
 
 /**
  * @author Marián Konček

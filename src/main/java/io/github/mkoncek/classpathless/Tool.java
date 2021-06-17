@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.terminusbrut.classpathless;
+package io.github.mkoncek.classpathless;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -26,14 +26,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import org.terminusbrut.classpathless.api.ClassIdentifier;
-import org.terminusbrut.classpathless.api.IdentifiedSource;
-import org.terminusbrut.classpathless.impl.Compiler;
-import org.terminusbrut.classpathless.impl.InMemoryJavaSourceFileObject;
-import org.terminusbrut.classpathless.impl.JavaSourcePackageNameReader;
-
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+
+import io.github.mkoncek.classpathless.api.ClassIdentifier;
+import io.github.mkoncek.classpathless.api.IdentifiedSource;
+import io.github.mkoncek.classpathless.impl.Compiler;
+import io.github.mkoncek.classpathless.impl.InMemoryJavaSourceFileObject;
+import io.github.mkoncek.classpathless.impl.JavaSourcePackageNameReader;
 
 /**
  * @author Marián Konček
