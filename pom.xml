@@ -12,7 +12,7 @@
   <url>https://github.com/mkoncek/classpathless-compiler/</url>
 
   <scm>
-    <developerConnection>scm:git:https://github.com/mkoncek/classpathless-compiler.git</developerConnection>
+    <developerConnection>scm:git:git@github.com:mkoncek/classpathless-compiler.git</developerConnection>
   </scm>
 
   <licenses>
