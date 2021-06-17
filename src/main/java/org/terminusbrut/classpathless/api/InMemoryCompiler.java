@@ -6,9 +6,11 @@ import java.util.Optional;
 
 public interface InMemoryCompiler {
     /**
-     * @param classprovider provider for missing elements on classpath
-     * @param javaSourceFiles files to compile
-     * @return compiled bytecode of all javaSourceFiles
+     * @param classprovider Provider for missing elements on the classpath.
+     * @param messagesConsummer Accepts any diagnostic or logging information
+     * from the compiler.
+     * @param javaSourceFiles Files to compile.
+     * @return Compiled bytecode of all javaSourceFiles.
      */
     Collection<IdentifiedBytecode> compileClass(ClassesProvider classprovider,
             Optional<MessagesListener> messagesConsummer, IdentifiedSource... javaSourceFiles);
