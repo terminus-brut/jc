@@ -1,7 +1,8 @@
 package io.github.mkoncek.classpathless.api;
 
 import java.util.Objects;
-import edu.umd.cs.findbugs.annotations.*;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public class IdentifiedFile {
     private final ClassIdentifier classIdentifier;
@@ -16,7 +17,7 @@ public class IdentifiedFile {
     public ClassIdentifier getClassIdentifier() {
         return classIdentifier;
     }
-    
+
     @SuppressFBWarnings(value = {"EI_EXPOSE_REP", "EI_EXPOSE_REP2"}, justification = "pure wrapper class")
     public byte[] getFile() {
         return file;
