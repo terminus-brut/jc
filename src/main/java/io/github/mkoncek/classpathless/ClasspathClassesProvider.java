@@ -16,6 +16,7 @@
 package io.github.mkoncek.classpathless;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -28,8 +29,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.io.FileUtils;
 
 import io.github.mkoncek.classpathless.api.ClassIdentifier;
 import io.github.mkoncek.classpathless.api.ClassesProvider;
@@ -59,8 +58,8 @@ public class ClasspathClassesProvider implements ClassesProvider {
             var pathOfClass = classesToClassFilePaths.get(indentifier.getFullName());
 
             if (pathOfClass != null) {
-                try {
-                    var bytes = FileUtils.readFileToByteArray(pathOfClass.toFile());
+                try (var is = new FileInputStream(pathOfClass.toFile())) {
+                    var bytes = is.readAllBytes();
                     result.add(new IdentifiedBytecode(indentifier, bytes));
                 } catch (IOException ex) {
                     throw new UncheckedIOException(ex);

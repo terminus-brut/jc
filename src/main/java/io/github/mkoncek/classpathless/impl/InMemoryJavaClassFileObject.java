@@ -15,6 +15,8 @@
  */
 package io.github.mkoncek.classpathless.impl;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -23,14 +25,17 @@ import java.nio.charset.StandardCharsets;
 
 import javax.tools.SimpleJavaFileObject;
 
-import org.apache.commons.io.output.AbstractByteArrayOutputStream;
-import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream;
-
 /**
  * @author Marián Konček
  */
 public class InMemoryJavaClassFileObject extends SimpleJavaFileObject {
-    private AbstractByteArrayOutputStream bytes = new UnsynchronizedByteArrayOutputStream();
+    static class ByteArrayIOStream extends ByteArrayOutputStream {
+        public byte[] buf() {
+            return this.buf;
+        }
+    };
+
+    private ByteArrayIOStream byteStream = new ByteArrayIOStream();
 
     public InMemoryJavaClassFileObject(String name) {
         super(URI.create("class:///" + name), Kind.CLASS);
@@ -38,17 +43,17 @@ public class InMemoryJavaClassFileObject extends SimpleJavaFileObject {
 
     @Override
     public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException {
-        return bytes.toString(StandardCharsets.US_ASCII);
+        return byteStream.toString(StandardCharsets.US_ASCII);
     }
 
     @Override
     public InputStream openInputStream() throws IOException {
-        return bytes.toInputStream();
+        return new ByteArrayInputStream(byteStream.buf());
     }
 
     @Override
     public OutputStream openOutputStream() throws IOException {
-        return bytes;
+        return byteStream;
     }
 
     @Override
