@@ -15,9 +15,13 @@
  */
 package io.github.mkoncek.classpathless.impl;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.UncheckedIOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,7 +30,6 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.TreeSet;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
@@ -42,15 +45,6 @@ import io.github.mkoncek.classpathless.api.InMemoryCompiler;
 import io.github.mkoncek.classpathless.api.MessagesListener;
 
 public class Compiler implements InMemoryCompiler {
-    MessagesListener messagesListener = new MessagesListener() {
-        @Override
-        public void addMessage(Level level, String message) {
-        }
-        @Override
-        public void addMessage(Level level, String format, Object... args) {
-        }
-    };
-
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     InMemoryFileManager fileManager;
 
@@ -81,19 +75,20 @@ public class Compiler implements InMemoryCompiler {
                 }
             }
         }
-    };
+    }
+
     private List<String> missingDependencies = new ArrayList<>();
     final List<JavaFileObject> compilationUnits = new ArrayList<>();
 
     public Compiler() throws IOException {
         this.fileManager = new InMemoryFileManager(
-                compiler.getStandardFileManager(null, null, null), messagesListener);
+                compiler.getStandardFileManager(null, null, null));
     }
 
     @Override
     public Collection<IdentifiedBytecode> compileClass(
             ClassesProvider classprovider,
-            Optional<MessagesListener> messagesConsummer,
+            Optional<MessagesListener> messagesConsumer,
             IdentifiedSource... javaSourceFiles) {
         final List<JavaFileObject> compilationUnits = new ArrayList<>();
 
@@ -112,6 +107,84 @@ public class Compiler implements InMemoryCompiler {
             throw new RuntimeException(ex);
         }
 
+        var messagesListener = messagesConsumer.orElse(new LoggingSwitch.NullMessagesListener());
+        PrintStream loggerPrinter;
+
+        {
+            var logging = System.getProperty("io.github.mkoncek.cplc.logging");
+            if (logging == null) {
+                loggerPrinter = new PrintStream(PrintStream.nullOutputStream(), false, StandardCharsets.UTF_8);
+            } else {
+                if (logging.isEmpty()) {
+                    loggerPrinter = System.err;
+                } else {
+                    FileOutputStream os;
+                    try {
+                        /// TODO not closed if any exception happens
+                        os = new FileOutputStream(Paths.get(logging).toFile());
+                        loggerPrinter = new PrintStream(os, true, StandardCharsets.UTF_8);
+                    } catch (IOException ex) {
+                        throw new UncheckedIOException(ex);
+                    }
+                }
+            }
+        }
+
+        var loggingSwitch = new LoggingSwitch(loggerPrinter, messagesListener);
+
+        {
+            var level = Level.OFF;
+            var loglevel = System.getProperty("io.github.mkoncek.cplc.loglevel");
+            if (loglevel != null) {
+                switch (loglevel) {
+                    case "all":
+                        level = Level.ALL;
+                        break;
+
+                    case "finest":
+                        level = Level.FINEST;
+                        break;
+
+                    case "finer":
+                        level = Level.FINER;
+                        break;
+
+                    case "fine":
+                        level = Level.FINE;
+                        break;
+
+                    case "config":
+                        level = Level.CONFIG;
+                        break;
+
+                    case "info":
+                        level = Level.INFO;
+                        break;
+
+                    case "warning":
+                        level = Level.WARNING;
+                        break;
+
+                    case "severe":
+                        level = Level.SEVERE;
+                        break;
+
+                    case "off":
+                        level = Level.OFF;
+                        break;
+
+                    default :
+                        throw new IllegalArgumentException("Unrecognized logging level: \"" + loglevel + "\"");
+                }
+            }
+
+            loggingSwitch.setLogLevel(level);
+        }
+
+        if (System.getProperty("io.github.mkoncek.cplc.tracing") != null) {
+            loggingSwitch.setTracing(true);
+        }
+
         var classOutputs = new ArrayList<JavaFileObject>();
         fileManager.setClassProvider(classprovider);
 
@@ -119,28 +192,26 @@ public class Compiler implements InMemoryCompiler {
 
         fileManager.setAvailableClasses(availableClasses);
 
-        messagesConsummer.ifPresent(ml -> {messagesListener = ml;});
-        var listener = new DiagnosticToMessagesListener(messagesListener);
+        loggerPrinter.println(availableClasses);
+
+        fileManager.setLoggingSwitch(loggingSwitch);
 
         while (!compiler.getTask(
                 null,
                 fileManager,
-                listener,
+                new DiagnosticToMessagesListener(messagesListener),
                 null,
                 null,
                 compilationUnits)
                 .call()) {
             if (!missingDependencies.isEmpty()) {
                 messagesListener.addMessage(Level.INFO, "resolving deps: "
-                        + missingDependencies.stream().collect(Collectors.joining(", ")));
+                        + String.join(", ", missingDependencies));
                 break;
             } else {
                 throw new RuntimeException("Could not compile file");
             }
         }
-
-        fileManager.setClassProvider(null);
-        fileManager.clearAndGetOutput(classOutputs);
 
         var result = new ArrayList<IdentifiedBytecode>();
 
@@ -155,6 +226,11 @@ public class Compiler implements InMemoryCompiler {
             }
             result.add(new IdentifiedBytecode(identifier, content));
         }
+
+        fileManager.setClassProvider(null);
+        fileManager.setLoggingSwitch(null);
+        fileManager.clearAndGetOutput(classOutputs);
+        loggerPrinter.close();
 
         return result;
     }

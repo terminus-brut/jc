@@ -1,6 +1,11 @@
-# jc
-## Installation
-`JAVA_HOME=/usr/lib/jvm/java-11 mvn install`
+# classpathless-compiler
 
-## Usage
-`./target/assembly-1.0/tool-1.0.jar -i ${java_source_files}`
+## Logging properties
+* `io.github.mkoncek.cplc.logging=[filename]` - sets the logging output, if not
+provided, logging output is discarded, if empty logs into `stderr`.
+
+* `io.github.mkoncek.cplc.loglevel=[[off] | severe | warning | info | config | fine | finer | finest | all]` -
+sets the level of logging, default is `off`.
+
+* `io.github.mkoncek.cplc.tracing` - enables very detailed logging of each
+function call, requires `logging` and `loglevel` to be set.
