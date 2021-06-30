@@ -1,10 +1,22 @@
 # classpathless-compiler
+
 Classpathless compiler is a tool intended to be used to recompile java sources
 from decompiled classes. This tool works differently from the traditional java
 compiler in that it doesn't use a provided classpath but instead pulls
 dependencies using an API.
 
+## CLI tool
+
+This tool behaves similar to `javac` but it uses its own API to resolve imports.
+
+Command line options:
+
+* `-h` - help
+* `-cp`, `-classpath` - Specify classpath
+* `-d` - Output directory where to put the `.class` files
+
 ## Logging properties
+
 * `io.github.mkoncek.cplc.logging=[filename]` - sets the logging output, if not
 provided, logging output is discarded, if empty logs into `stderr`.
 
