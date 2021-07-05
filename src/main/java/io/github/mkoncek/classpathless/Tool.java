@@ -31,9 +31,11 @@ import com.beust.jcommander.Parameter;
 
 import io.github.mkoncek.classpathless.api.ClassIdentifier;
 import io.github.mkoncek.classpathless.api.IdentifiedSource;
-import io.github.mkoncek.classpathless.impl.Compiler;
+import io.github.mkoncek.classpathless.api.MessagesListener;
+import io.github.mkoncek.classpathless.impl.CompilerJT;
 import io.github.mkoncek.classpathless.impl.InMemoryJavaSourceFileObject;
 import io.github.mkoncek.classpathless.impl.JavaSourcePackageNameReader;
+import io.github.mkoncek.classpathless.impl.PrintingMessagesListener;
 
 /**
  * @author Marián Konček
@@ -66,7 +68,7 @@ public class Tool {
 
         var ccp = new ClasspathClassesProvider(arguments.classpath);
 
-        var compiler = new Compiler();
+        var compiler = new CompilerJT();
 
         var sources = new IdentifiedSource[arguments.inputs.size()];
 
@@ -84,6 +86,8 @@ public class Tool {
                 var classPath = Paths.get(inputFile).getFileName();
                 if (classPath != null) {
                     var className = classPath.toString();
+                    System.out.print("className ");
+                    System.out.println(className);
                     /// Remove ".java"
                     className = className.substring(0, className.length() - 5);
                     if (fullyQualifiedName == null) {
@@ -103,7 +107,12 @@ public class Tool {
             sources[i] = new IdentifiedSource(sourceIdentifier, content, Optional.empty());
         }
 
-        for (var result : compiler.compileClass(ccp, Optional.empty(), sources)) {
+        for (var src : sources) {
+            System.out.println("getFullName " + src.getClassIdentifier().getFullName());
+        }
+
+        Optional<MessagesListener> messagesListener = Optional.of(new PrintingMessagesListener());
+        for (var result : compiler.compileClass(ccp, messagesListener, sources)) {
             var outPath = Paths.get(arguments.output).resolve(
                     Paths.get("./" + result.getClassIdentifier().getFullName()
                             .replace(".", File.separator) + ".class"));

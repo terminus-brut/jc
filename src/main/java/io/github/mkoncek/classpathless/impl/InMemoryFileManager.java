@@ -61,6 +61,7 @@ public class InMemoryFileManager implements JavaFileManager {
     }
 
     void clearAndGetOutput(Collection<JavaFileObject> classOutput) {
+        System.out.println("#### " + classes.size());
         classOutput.addAll(classes);
         classes.clear();
         nameToBytecode.clear();

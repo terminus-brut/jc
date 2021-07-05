@@ -39,7 +39,7 @@ public class InMemoryJavaSourceFileObjectTest {
     void testContentFromFile() {
         var contentBuilder = new StringBuilder();
 
-        try (var is = new FileInputStream("src/test/resources/Hello.java")) {
+        try (var is = new FileInputStream("src/test/resources/io/github/mkoncek/classpathless/impl/SimpleHello/Hello.java")) {
             var reader = new BufferedReader(new InputStreamReader(is));
             while (reader.ready()) {
                 contentBuilder.append(reader.readLine());
@@ -49,7 +49,7 @@ public class InMemoryJavaSourceFileObjectTest {
             throw new UncheckedIOException(ex);
         }
 
-        try (var is = new FileInputStream("src/test/resources/Hello.java")) {
+        try (var is = new FileInputStream("src/test/resources/io/github/mkoncek/classpathless/impl/SimpleHello/Hello.java")) {
             var obj = new InMemoryJavaSourceFileObject("Hello.java", is);
             var content = contentBuilder.toString();
             assertEquals(content, obj.getCharContent(true));
