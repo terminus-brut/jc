@@ -13,5 +13,3 @@ public class IdentifiedBytecode extends IdentifiedFile {
         super(classIdentifier, file);
     }
 }
-
-

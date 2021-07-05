@@ -12,7 +12,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 @SuppressFBWarnings(value = {"EQ_DOESNT_OVERRIDE_EQUALS"}, justification = "intentionally using equals from superclass")
 public class IdentifiedSource extends IdentifiedFile {
     private final Optional<String> encoding;
-    
+
     /**
      *
      * @param classIdentifier fully qualified name of class
@@ -32,5 +32,3 @@ public class IdentifiedSource extends IdentifiedFile {
         }
     }
 }
-
-

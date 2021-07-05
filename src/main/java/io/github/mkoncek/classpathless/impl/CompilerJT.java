@@ -48,8 +48,8 @@ import io.github.mkoncek.classpathless.api.MessagesListener;
  * An implementation using javax.tools compiler API
  */
 public class CompilerJT implements InMemoryCompiler {
-    JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-    InMemoryFileManager fileManager;
+    private JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+    private InMemoryFileManager fileManager;
 
     static private class DiagnosticToMessagesListener implements DiagnosticListener<JavaFileObject> {
         MessagesListener listener;
@@ -73,8 +73,6 @@ public class CompilerJT implements InMemoryCompiler {
             }
         }
     }
-
-    final List<JavaFileObject> compilationUnits = new ArrayList<>();
 
     public CompilerJT() throws IOException {
         System.out.println("new compiler");
@@ -120,7 +118,7 @@ public class CompilerJT implements InMemoryCompiler {
                     FileOutputStream os;
                     try {
                         /// TODO not closed if any exception happens
-                        os = new FileOutputStream(Paths.get(logging).toFile());
+                        os = new FileOutputStream(Paths.get(logging).toFile(), true);
                         loggerPrinter = new PrintStream(os, true, StandardCharsets.UTF_8);
                     } catch (IOException ex) {
                         throw new UncheckedIOException(ex);
