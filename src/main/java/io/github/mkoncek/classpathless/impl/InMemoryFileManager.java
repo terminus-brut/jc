@@ -247,7 +247,7 @@ public class InMemoryFileManager implements JavaFileManager {
 
                 if (availableClassName.contains("$$Lambda$")) {
                     loggingSwitch.logln(Level.FINE, "Ignoring lambda class \"{0}\"", availableClassName);
-                    break;
+                    continue;
                 }
 
                 /// Remove package name + "."
@@ -261,7 +261,10 @@ public class InMemoryFileManager implements JavaFileManager {
                 if (!found.isEmpty()) {
                     for (var identified : found) {
                         var classObject = new InMemoryJavaClassFileObject(availableClassName);
-                        classObject.openOutputStream().write(identified.getFile());
+                        try (var os = classObject.openOutputStream())
+                        {
+                            os.write(identified.getFile());
+                        }
                         result.add(classObject);
                         nameToBytecode.put(availableClassName, classObject);
                     }
