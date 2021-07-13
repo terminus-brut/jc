@@ -74,7 +74,6 @@ public class CompilerJavac implements InMemoryCompiler {
 
     public CompilerJavac(SourcePreprocessor sourcePreprocessor) throws IOException {
         this.sourcePreprocessor = sourcePreprocessor;
-        System.out.println("new compiler");
         this.fileManager = new InMemoryFileManager(
                 compiler.getStandardFileManager(null, null, null));
     }
@@ -89,8 +88,6 @@ public class CompilerJavac implements InMemoryCompiler {
             Optional<MessagesListener> messagesConsumer,
             IdentifiedSource... javaSourceFiles) {
         final List<JavaFileObject> compilationUnits = new ArrayList<>();
-
-        System.out.println("compile class");
 
         var preprocessedSources = sourcePreprocessor.process(Arrays.asList(javaSourceFiles));
 

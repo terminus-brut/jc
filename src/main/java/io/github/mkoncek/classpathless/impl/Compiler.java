@@ -19,7 +19,7 @@ import java.io.IOException;
 
 // Use explicit CompilerJavac instead
 @Deprecated
-public class Compiler extends CompilerECJ {
+public class Compiler extends CompilerJavac {
     public Compiler() throws IOException {
         super();
     }
