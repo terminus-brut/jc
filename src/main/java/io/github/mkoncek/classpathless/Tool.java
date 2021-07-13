@@ -104,7 +104,7 @@ public class Tool {
 
             var content = sourceObject.getCharContent(true).toString().getBytes(StandardCharsets.UTF_8);
 
-            sources[i] = new IdentifiedSource(sourceIdentifier, content, Optional.empty());
+            sources[i] = new IdentifiedSource(sourceIdentifier, content);
         }
 
         for (var src : sources) {

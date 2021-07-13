@@ -22,36 +22,72 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.logging.Level;
 
 import javax.tools.SimpleJavaFileObject;
+
+import io.github.mkoncek.classpathless.api.ClassIdentifier;
+import io.github.mkoncek.classpathless.api.ClassesProvider;
 
 /**
  * @author Marián Konček
  */
 public class InMemoryJavaClassFileObject extends SimpleJavaFileObject {
+    private LoggingSwitch loggingSwitch;
+    private ClassesProvider classProvider;
     private ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
 
-    public InMemoryJavaClassFileObject(String name) {
+    public InMemoryJavaClassFileObject(String name, ClassesProvider classProvider, LoggingSwitch loggingSwitch) {
         super(URI.create("class:///" + name), Kind.CLASS);
+        this.classProvider = classProvider;
+        this.loggingSwitch = loggingSwitch;
+    }
+
+    public InMemoryJavaClassFileObject(String name, ClassesProvider classProvider) {
+        this(name, classProvider, new LoggingSwitch.Null());
+    }
+
+    String identifiedName() {
+        return toUri().toString().substring(9);
     }
 
     @Override
     public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException {
-        return byteStream.toString(StandardCharsets.US_ASCII);
+        loggingSwitch.trace(this, "getCharContent");
+        String result;
+
+        try (var is = openInputStream()) {
+            result = new String(is.readAllBytes(), StandardCharsets.US_ASCII);
+        }
+
+        loggingSwitch.trace(result);
+        return result;
     }
 
     @Override
     public InputStream openInputStream() throws IOException {
+        loggingSwitch.trace(this, "openInputStream");
+
+        if (classProvider != null) {
+            var bytecodes = classProvider.getClass(new ClassIdentifier(identifiedName()));
+
+            if (bytecodes.size() == 1) {
+                loggingSwitch.logln(Level.FINEST, "Found bytecode for {0}", this);
+                byteStream.write(bytecodes.iterator().next().getFile());
+                classProvider = null;
+            } else if (bytecodes.size() == 0) {
+                loggingSwitch.logln(Level.FINEST, "Bytecode for {0} not found", this);
+            } else {
+                throw new IllegalStateException();
+            }
+        }
+
         return new ByteArrayInputStream(byteStream.toByteArray());
     }
 
     @Override
     public OutputStream openOutputStream() throws IOException {
+        loggingSwitch.trace(this, "openOutputStream");
         return byteStream;
-    }
-
-    @Override
-    public boolean isNameCompatible(String simpleName, Kind kind) {
-        return super.isNameCompatible(simpleName, kind);
     }
 }

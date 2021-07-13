@@ -46,7 +46,7 @@ import io.github.mkoncek.classpathless.api.MessagesListener;
 public class CompilerJavac implements InMemoryCompiler {
     private JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     private InMemoryFileManager fileManager;
-    private SourcePreprocessor sourcePreprocessor;
+    private Arguments arguments;
 
     static private class DiagnosticToMessagesListener implements DiagnosticListener<JavaFileObject> {
         MessagesListener listener;
@@ -72,14 +72,14 @@ public class CompilerJavac implements InMemoryCompiler {
         }
     }
 
-    public CompilerJavac(SourcePreprocessor sourcePreprocessor) throws IOException {
-        this.sourcePreprocessor = sourcePreprocessor;
+    public CompilerJavac(Arguments arguments) {
         this.fileManager = new InMemoryFileManager(
                 compiler.getStandardFileManager(null, null, null));
+        this.arguments = arguments;
     }
 
-    public CompilerJavac() throws IOException {
-        this(new SourcePreprocessor.NoSourcePreprocessor());
+    public CompilerJavac() {
+        this(new Arguments());
     }
 
     @Override
@@ -89,9 +89,7 @@ public class CompilerJavac implements InMemoryCompiler {
             IdentifiedSource... javaSourceFiles) {
         final List<JavaFileObject> compilationUnits = new ArrayList<>();
 
-        var preprocessedSources = sourcePreprocessor.process(Arrays.asList(javaSourceFiles));
-
-        for (var source : preprocessedSources) {
+        for (var source : Arrays.asList(javaSourceFiles)) {
             compilationUnits.add(new InMemoryJavaSourceFileObject(source));
         }
 
@@ -103,6 +101,7 @@ public class CompilerJavac implements InMemoryCompiler {
 
         fileManager.setAvailableClasses(availableClasses);
         fileManager.setLoggingSwitch(new LoggingSwitch());
+        fileManager.setArguments(arguments);
 
         if (!compiler.getTask(
                 null,

@@ -36,9 +36,11 @@ import io.github.mkoncek.classpathless.api.ClassesProvider;
 import io.github.mkoncek.classpathless.api.IdentifiedBytecode;
 
 public class NullClassesProvider implements ClassesProvider {
-    private Map<String, IdentifiedBytecode> nameToBytecode = new TreeMap<>();
+    private Map<String, IdentifiedBytecode> nameToBytecode;
 
-    public NullClassesProvider() {
+    public NullClassesProvider(Map<String, IdentifiedBytecode> initialMapping) {
+        this.nameToBytecode = initialMapping;
+
         try {
             var fm = ToolProvider.getSystemJavaCompiler().getStandardFileManager(null, null, StandardCharsets.UTF_8);
 
@@ -73,6 +75,10 @@ public class NullClassesProvider implements ClassesProvider {
         }
     }
 
+    public NullClassesProvider() {
+        this(new TreeMap<>());
+    }
+
     @Override
     public List<String> getClassPathListing() {
         return new ArrayList<>(nameToBytecode.keySet());
@@ -86,7 +92,6 @@ public class NullClassesProvider implements ClassesProvider {
             var bytecode = nameToBytecode.get(name.getFullName());
             if (bytecode != null) {
                 if (bytecode.getClassIdentifier().equals(name)) {
-                    System.out.println(name);
                     result.add(bytecode);
                 }
             }
@@ -101,7 +106,17 @@ public class NullClassesProvider implements ClassesProvider {
         // for (var loc : fm.list(StandardLocation.SYSTEM_MODULES, "", Set.of(Kind.SOURCE, Kind.CLASS, Kind.HTML, Kind.OTHER), true)) {
         for (var set : fm.listLocationsForModules(StandardLocation.SYSTEM_MODULES)) {
             for (var loc : set) {
-                System.out.println(loc.getName());
+                if (loc.getName().equals("SYSTEM_MODULES[java.base]")) {
+                    int size = 0;
+                    var objs = fm.list(StandardLocation.CLASS_PATH, "", Set.of(Kind.CLASS), true);
+                    for (var obj : objs) {
+                        System.out.println(obj);
+                        ++size;
+                    }
+                    System.out.println(size);
+                }
+
+                // System.out.println(loc.getName());
                 var jf = fm.getJavaFileForInput(loc, "module-info", Kind.CLASS);
                 try (var is = jf.openInputStream()) {
                     // System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));

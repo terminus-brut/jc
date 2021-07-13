@@ -31,6 +31,12 @@ public class LoggingSwitch {
     private boolean tracing = false;
     private java.util.logging.Level logLevel = Level.OFF;
 
+    public static class Null extends LoggingSwitch {
+        public Null() {
+            super(new PrintStream(PrintStream.nullOutputStream(), false, StandardCharsets.UTF_8));
+        }
+    }
+
     public LoggingSwitch(PrintStream printer) {
         this.printer = printer;
     }

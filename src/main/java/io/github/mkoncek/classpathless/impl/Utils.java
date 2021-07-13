@@ -21,32 +21,29 @@ import java.util.Collection;
 import java.util.SortedSet;
 import java.util.logging.Level;
 
-import io.github.mkoncek.classpathless.api.ClassIdentifier;
 import io.github.mkoncek.classpathless.api.ClassesProvider;
-import io.github.mkoncek.classpathless.api.IdentifiedBytecode;
 
 public class Utils {
-    static Collection<IdentifiedBytecode> pullClasses(SortedSet<String> availableClasses, String importName, boolean recurse,
-            ClassesProvider classprovider, LoggingSwitch loggingSwitch) throws IOException {
-        var result = new ArrayList<IdentifiedBytecode>();
+    static Collection<InMemoryJavaClassFileObject> loadClasses(SortedSet<String> availableClasses,
+            String importName, boolean recurse, ClassesProvider classprovider,
+            LoggingSwitch loggingSwitch) throws IOException {
+        var result = new ArrayList<InMemoryJavaClassFileObject>();
 
         for (var availableClassName : availableClasses.tailSet(importName)) {
             if (!availableClassName.startsWith(importName)) {
                 break;
             }
 
-            if (availableClassName.length() > importName.length()
-                    && availableClassName.charAt(importName.length()) != '.') {
-                break;
+            if (availableClassName.length() > importName.length() + 1) {
+                if (availableClassName.substring(importName.length() + 1).contains(".") && !recurse) {
+                    loggingSwitch.logln(Level.FINEST, "Skipping over class from a subpackage from ClassProvider: \"{0}\"", availableClassName);
+                    continue;
+                }
             }
 
-            if (availableClassName.contains("$$Lambda$")) {
-                loggingSwitch.logln(Level.FINE, "Ignoring lambda class \"{0}\"", availableClassName);
-                continue;
-            }
+            loggingSwitch.logln(Level.FINE, "Loading class from ClassProvider: \"{0}\"", availableClassName);
 
-            loggingSwitch.logln(Level.FINE, "Pulling class from ClassProvider: \"{0}\"", availableClassName);
-            result.addAll(classprovider.getClass(new ClassIdentifier(availableClassName)));
+            result.add(new InMemoryJavaClassFileObject(availableClassName, classprovider));
         }
 
         return result;

@@ -25,8 +25,6 @@ import java.util.Iterator;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.TreeMap;
-import java.util.logging.Level;
 
 import javax.tools.FileObject;
 import javax.tools.JavaFileManager;
@@ -34,20 +32,26 @@ import javax.tools.JavaFileObject;
 import javax.tools.JavaFileObject.Kind;
 import javax.tools.StandardLocation;
 
-import io.github.mkoncek.classpathless.api.ClassIdentifier;
 import io.github.mkoncek.classpathless.api.ClassesProvider;
+import io.github.mkoncek.classpathless.api.InMemoryCompiler;
 
 /**
  * @author Marián Konček
  */
 public class InMemoryFileManager implements JavaFileManager {
     private JavaFileManager delegate;
+    private InMemoryCompiler.Arguments arguments = null;
+
     private ClassesProvider classprovider = null;
     private SortedSet<String> availableClasses = null;
     private LoggingSwitch loggingSwitch = null;
 
-    private ArrayList<InMemoryJavaClassFileObject> classes = new ArrayList<>();
-    private TreeMap<String, InMemoryJavaClassFileObject> nameToBytecode = new TreeMap<>();
+    private ArrayList<InMemoryJavaClassFileObject> classOutputs = new ArrayList<>();
+
+    public InMemoryFileManager(JavaFileManager delegate) {
+        super();
+        this.delegate = delegate;
+    }
 
     void setLoggingSwitch(LoggingSwitch loggingSwitch) {
         this.loggingSwitch = loggingSwitch;
@@ -61,23 +65,21 @@ public class InMemoryFileManager implements JavaFileManager {
         this.availableClasses = availableClasses;
     }
 
-    void clearAndGetOutput(Collection<JavaFileObject> classOutput) {
-        loggingSwitch.trace(this, "clearAndGetOutput", classOutput);
-        classOutput.addAll(classes);
-        classes.clear();
-        nameToBytecode.clear();
-        availableClasses.clear();
+    void setArguments(InMemoryCompiler.Arguments arguments) {
+        this.arguments = arguments;
     }
 
-    public InMemoryFileManager(JavaFileManager delegate) {
-        super();
-        this.delegate = delegate;
+    void clearAndGetOutput(Collection<JavaFileObject> classOutput) {
+        loggingSwitch.trace(this, "clearAndGetOutput", classOutput);
+        classOutput.addAll(classOutputs);
+        classOutputs.clear();
+        availableClasses.clear();
     }
 
     @Override
     public Location getLocationForModule(Location location, String moduleName)
             throws IOException {
-        loggingSwitch.trace(this, "getClassLoadingLock", location, moduleName);
+        loggingSwitch.trace(this, "getLocationForModule", location, moduleName);
         var result = delegate.getLocationForModule(location, moduleName);
         loggingSwitch.trace(result);
         return result;
@@ -118,11 +120,13 @@ public class InMemoryFileManager implements JavaFileManager {
         result = delegate.listLocationsForModules(location);
 
         if (location.equals(StandardLocation.SYSTEM_MODULES)) {
-            for (var set : result) {
-                for (var loc : set) {
-                    if (loc.getName().equals("SYSTEM_MODULES[java.base]")) {
-                        result = Arrays.asList(Set.of(loc));
-                        break;
+            if (!arguments.useHostJavaClasses()) {
+                for (var set : result) {
+                    for (var loc : set) {
+                        if (loc.getName().equals("SYSTEM_MODULES[java.base]")) {
+                            result = Arrays.asList(Set.of(loc));
+                            break;
+                        }
                     }
                 }
             }
@@ -211,10 +215,12 @@ public class InMemoryFileManager implements JavaFileManager {
     public JavaFileObject getJavaFileForOutput(Location location,
             String className, Kind kind, FileObject sibling) throws IOException {
         loggingSwitch.trace(this, "getJavaFileForOutput", location, className, kind, sibling);
-        if (kind == Kind.CLASS && location == StandardLocation.CLASS_OUTPUT) {
-            var result = new InMemoryJavaClassFileObject(className);
+        if (kind.equals(Kind.CLASS) && location.equals(StandardLocation.CLASS_OUTPUT)) {
+            /// We do not construct with ClassesProvider because the write will
+            /// happen by the caller
+            var result = new InMemoryJavaClassFileObject(className, null);
             loggingSwitch.trace(result);
-            classes.add(result);
+            classOutputs.add(result);
             return result;
         } else {
             var result = delegate.getJavaFileForOutput(location, className, kind, sibling);
@@ -237,9 +243,7 @@ public class InMemoryFileManager implements JavaFileManager {
         loggingSwitch.trace(this, "inferBinaryName", location, file);
         if (file instanceof InMemoryJavaClassFileObject) {
             var realFile = (InMemoryJavaClassFileObject) file;
-            var result = realFile.toUri().toString();
-            /// Remove "class:///"
-            result = result.substring(9);
+            var result = realFile.identifiedName();
             loggingSwitch.trace(result);
             return result;
         } else {
@@ -256,47 +260,14 @@ public class InMemoryFileManager implements JavaFileManager {
 
         if (location.equals(StandardLocation.CLASS_PATH)
                 || location.equals(StandardLocation.SOURCE_PATH)
-                || location.getName().startsWith("SYSTEM_MODULES[")) {
+                || (!arguments.useHostJavaClasses()
+                        && location.getName().equals("SYSTEM_MODULES[java.base]"))) {
             var result = new ArrayList<JavaFileObject>();
 
             if (!packageName.isEmpty()) {
-                for (var availableClassName : availableClasses.tailSet(packageName)) {
-                    if (!availableClassName.startsWith(packageName)) {
-                        break;
-                    }
-
-                    if (availableClassName.length() > packageName.length()
-                            && availableClassName.charAt(packageName.length()) != '.') {
-                        break;
-                    }
-
-                    if (availableClassName.contains("$$Lambda$")) {
-                        loggingSwitch.logln(Level.FINE, "Ignoring lambda class \"{0}\"", availableClassName);
-                        continue;
-                    }
-
-                    /// Remove package name + "."
-                    var shortName = availableClassName.substring(packageName.length() + 1);
-                    if (!recurse && shortName.contains(".")) {
-                        continue;
-                    }
-
-                    loggingSwitch.logln(Level.FINE, "Pulling class from ClassProvider: \"{0}\"", availableClassName);
-
-                    var found = classprovider.getClass(new ClassIdentifier(availableClassName));
-                    if (!found.isEmpty()) {
-                        for (var identified : found) {
-                            var classObject = new InMemoryJavaClassFileObject(availableClassName);
-                            try (var os = classObject.openOutputStream())
-                            {
-                                os.write(identified.getFile());
-                            }
-                            result.add(classObject);
-                            nameToBytecode.put(availableClassName, classObject);
-                        }
-                    }
-                }
+                result.addAll(Utils.loadClasses(availableClasses, packageName, recurse, classprovider, loggingSwitch));
             }
+
             loggingSwitch.trace(result);
             return result;
         } else {

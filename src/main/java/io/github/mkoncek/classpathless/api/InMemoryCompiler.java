@@ -5,6 +5,19 @@ import java.util.Collection;
 import java.util.Optional;
 
 public interface InMemoryCompiler {
+    static class Arguments {
+        private boolean useHostJavaClasses = true;
+
+        public boolean useHostJavaClasses() {
+            return useHostJavaClasses;
+        }
+
+        public Arguments useHostJavaClasses(boolean value) {
+            useHostJavaClasses = value;
+            return this;
+        }
+    }
+
     /**
      * @param classprovider Provider for missing elements on the classpath.
      * @param messagesConsummer Accepts any diagnostic or logging information

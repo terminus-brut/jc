@@ -12,13 +12,13 @@ import org.junit.jupiter.api.Test;
 public class InMemoryJavaClassFileObjectTest {
     @Test
     void testConstructor() {
-        var obj = new InMemoryJavaClassFileObject("Hello.class");
+        var obj = new InMemoryJavaClassFileObject("Hello.class", new NullClassesProvider());
         assertEquals("class:///Hello.class", obj.toUri().toASCIIString());
     }
 
     @Test
     void testContent() {
-        var obj = new InMemoryJavaClassFileObject("Hello.class");
+        var obj = new InMemoryJavaClassFileObject("Hello.class", new NullClassesProvider());
         try (var is = new FileInputStream("src/test/resources/io/github/mkoncek/classpathless/impl/SimpleHello/Hello.class")) {
             var fileContent = is.readAllBytes();
             obj.openOutputStream().write(fileContent);

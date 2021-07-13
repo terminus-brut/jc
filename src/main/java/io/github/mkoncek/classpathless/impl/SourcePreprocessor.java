@@ -26,8 +26,8 @@ public interface SourcePreprocessor {
         @Override
         public Collection<IdentifiedSource> process(Collection<IdentifiedSource> sources) {
             for (var source : sources) {
-                System.out.print("from preprocessor ");
-                System.out.println(source.getClassIdentifier().getFullName());
+                // System.out.print("from preprocessor ");
+                // System.out.println(source.getClassIdentifier().getFullName());
             }
 
             return sources;
