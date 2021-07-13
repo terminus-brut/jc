@@ -19,41 +19,32 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Optional;
 import java.util.TreeSet;
 
 import org.junit.jupiter.api.Test;
 
 import io.github.mkoncek.classpathless.api.ClassIdentifier;
-import io.github.mkoncek.classpathless.api.ClassesProvider;
-import io.github.mkoncek.classpathless.api.IdentifiedBytecode;
 import io.github.mkoncek.classpathless.api.IdentifiedSource;
 import io.github.mkoncek.classpathless.api.MessagesListener;
 
 public class CompilerJTTest {
-    static class EmptyClassesProvider implements ClassesProvider {
-        @Override
-        public List<String> getClassPathListing() {
-            return Collections.emptyList();
-        }
-
-        @Override
-        public Collection<IdentifiedBytecode> getClass(ClassIdentifier... names) {
-            return Collections.emptyList();
-        }
-    }
-
-    private static final ClassesProvider emptyClassesProvider = new EmptyClassesProvider();
     private static final Optional<MessagesListener> printingListener = Optional.of(new PrintingMessagesListener());
     private static final Comparator<byte[]> byteArrayComparator = (byte[] lhs, byte[] rhs) -> Arrays.compare(lhs, rhs);
 
+    private static void setProperties() {
+        // System.setProperty("io.github.mkoncek.cplc.logging", "");
+        // System.setProperty("io.github.mkoncek.cplc.loglevel", "finest");
+        // System.setProperty("io.github.mkoncek.cplc.tracing", "");
+    }
+
     @Test
     public void testSimple() throws Exception {
+        setProperties();
+
         var expectedBytecodeContents = new TreeSet<byte[]>(byteArrayComparator);
 
         for (var name : new String[] {
@@ -70,9 +61,10 @@ public class CompilerJTTest {
             content = is.readAllBytes();
         }
 
-        var jc = new CompilerJT();
-        var source = new IdentifiedSource(new ClassIdentifier("Hello"), content, Optional.empty());
-        var compilationResult = jc.compileClass(emptyClassesProvider, printingListener, source);
+        var jc = new CompilerJavac();
+        var source = new IdentifiedSource(new ClassIdentifier("Hello"), content);
+
+        var compilationResult = jc.compileClass(new NullClassesProvider(), printingListener, source);
         assertEquals(expectedBytecodeContents.size(), compilationResult.size());
 
         var compiledBytecodes = new TreeSet<>(byteArrayComparator);
@@ -91,6 +83,8 @@ public class CompilerJTTest {
 
     @Test
     public void testNested() throws Exception {
+        setProperties();
+
         var expectedBytecodeContents = new TreeSet<byte[]>(byteArrayComparator);
 
         for (var name : new String[] {
@@ -108,9 +102,9 @@ public class CompilerJTTest {
             content = is.readAllBytes();
         }
 
-        var jc = new CompilerJT();
-        var source = new IdentifiedSource(new ClassIdentifier("Hello"), content, Optional.empty());
-        var compilationResult = jc.compileClass(emptyClassesProvider, printingListener, source);
+        var jc = new CompilerJavac();
+        var source = new IdentifiedSource(new ClassIdentifier("Hello"), content);
+        var compilationResult = jc.compileClass(new NullClassesProvider(), printingListener, source);
         assertEquals(expectedBytecodeContents.size(), compilationResult.size());
 
         var compiledBytecodes = new TreeSet<>(byteArrayComparator);
@@ -129,6 +123,8 @@ public class CompilerJTTest {
 
     @Test
     public void testAnonymous() throws Exception {
+        setProperties();
+
         var expectedBytecodeContents = new TreeSet<byte[]>(byteArrayComparator);
 
         for (var name : new String[] {
@@ -147,9 +143,9 @@ public class CompilerJTTest {
             content = is.readAllBytes();
         }
 
-        var jc = new CompilerJT();
-        var source = new IdentifiedSource(new ClassIdentifier("Hello"), content, Optional.empty());
-        var compilationResult = jc.compileClass(emptyClassesProvider, printingListener, source);
+        var jc = new CompilerJavac();
+        var source = new IdentifiedSource(new ClassIdentifier("Hello"), content);
+        var compilationResult = jc.compileClass(new NullClassesProvider(), printingListener, source);
         assertEquals(expectedBytecodeContents.size(), compilationResult.size());
 
         var compiledBytecodes = new TreeSet<>(byteArrayComparator);
@@ -168,7 +164,9 @@ public class CompilerJTTest {
 
     @Test
     public void testRepeated() throws Exception {
-        var jc = new CompilerJT();
+        setProperties();
+
+        var jc = new CompilerJavac();
 
         for (int i = 0; i != 3; ++i) {
             var expectedBytecodeContents = new TreeSet<byte[]>(byteArrayComparator);
@@ -189,8 +187,8 @@ public class CompilerJTTest {
                 content = is.readAllBytes();
             }
 
-            var source = new IdentifiedSource(new ClassIdentifier("Hello"), content, Optional.empty());
-            var compilationResult = jc.compileClass(emptyClassesProvider, printingListener, source);
+            var source = new IdentifiedSource(new ClassIdentifier("Hello"), content);
+            var compilationResult = jc.compileClass(new NullClassesProvider(), printingListener, source);
             assertEquals(expectedBytecodeContents.size(), compilationResult.size());
 
             var compiledBytecodes = new TreeSet<>(byteArrayComparator);
@@ -206,5 +204,44 @@ public class CompilerJTTest {
             }
             assertEquals(false, actit.hasNext());
         }
+    }
+
+    public static void main(String[] args) throws IOException {
+        setProperties();
+
+        var expectedBytecodeContents = new TreeSet<byte[]>(byteArrayComparator);
+
+        for (var name : new String[] {
+                "src/test/resources/io/github/mkoncek/classpathless/impl/SimpleHello/Hello.class",
+        }) {
+            try (var is = new FileInputStream(name))
+            {
+                expectedBytecodeContents.add(is.readAllBytes());
+            }
+        }
+
+        byte[] content;
+        try (var is = new FileInputStream("src/test/resources/io/github/mkoncek/classpathless/impl/SimpleHello/Hello.java")) {
+            content = is.readAllBytes();
+        }
+
+        var jc = new CompilerJavac();
+        var source = new IdentifiedSource(new ClassIdentifier("Hello"), content);
+
+        var compilationResult = jc.compileClass(new NullClassesProvider(), printingListener, source);
+        assertEquals(expectedBytecodeContents.size(), compilationResult.size());
+
+        var compiledBytecodes = new TreeSet<>(byteArrayComparator);
+        for (var ib : compilationResult) {
+            compiledBytecodes.add(ib.getFile());
+        }
+
+        var actit = compiledBytecodes.iterator();
+        var expit = expectedBytecodeContents.iterator();
+
+        while (expit.hasNext()) {
+            assertArrayEquals(expit.next(), actit.next());
+        }
+        assertEquals(false, actit.hasNext());
     }
 }

@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2020 Marián Konček
+ * Copyright (c) 2021 Marián Konček
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,16 @@
  */
 package io.github.mkoncek.classpathless.impl;
 
-import java.io.IOException;
+import java.util.logging.Level;
 
-// Use explicit CompilerJavac instead
-@Deprecated
-public class Compiler extends CompilerECJ {
-    public Compiler() throws IOException {
-        super();
+import io.github.mkoncek.classpathless.api.MessagesListener;
+
+public class NullMessagesListener implements MessagesListener {
+    @Override
+    public void addMessage(Level level, String message) {
+    }
+
+    @Override
+    public void addMessage(Level level, String format, Object... args) {
     }
 }

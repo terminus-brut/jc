@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.ServiceLoader;
@@ -61,7 +62,7 @@ public class InMemoryFileManager implements JavaFileManager {
     }
 
     void clearAndGetOutput(Collection<JavaFileObject> classOutput) {
-        System.out.println("#### " + classes.size());
+        loggingSwitch.trace(this, "clearAndGetOutput", classOutput);
         classOutput.addAll(classes);
         classes.clear();
         nameToBytecode.clear();
@@ -103,7 +104,8 @@ public class InMemoryFileManager implements JavaFileManager {
     @Override
     public String inferModuleName(Location location) throws IOException {
         loggingSwitch.trace(this, "inferModuleName", location);
-        var result = delegate.inferModuleName(location);
+        String result;
+        result = delegate.inferModuleName(location);
         loggingSwitch.trace(result);
         return result;
     }
@@ -112,7 +114,20 @@ public class InMemoryFileManager implements JavaFileManager {
     public Iterable<Set<Location>> listLocationsForModules(Location location)
             throws IOException {
         loggingSwitch.trace(this, "listLocationsForModules", location);
-        var result = delegate.listLocationsForModules(location);
+        Iterable<Set<Location>> result;
+        result = delegate.listLocationsForModules(location);
+
+        if (location.equals(StandardLocation.SYSTEM_MODULES)) {
+            for (var set : result) {
+                for (var loc : set) {
+                    if (loc.getName().equals("SYSTEM_MODULES[java.base]")) {
+                        result = Arrays.asList(Set.of(loc));
+                        break;
+                    }
+                }
+            }
+        }
+
         loggingSwitch.trace(result);
         return result;
     }
@@ -211,7 +226,8 @@ public class InMemoryFileManager implements JavaFileManager {
     @Override
     public boolean hasLocation(Location location) {
         loggingSwitch.trace(this, "hasLocation", location);
-        var result = delegate.hasLocation(location);
+        boolean result;
+        result = delegate.hasLocation(location);
         loggingSwitch.trace(result);
         return result;
     }
@@ -222,9 +238,9 @@ public class InMemoryFileManager implements JavaFileManager {
         if (file instanceof InMemoryJavaClassFileObject) {
             var realFile = (InMemoryJavaClassFileObject) file;
             var result = realFile.toUri().toString();
-            loggingSwitch.trace(result);
             /// Remove "class:///"
             result = result.substring(9);
+            loggingSwitch.trace(result);
             return result;
         } else {
             var result = delegate.inferBinaryName(location, file);
@@ -237,36 +253,47 @@ public class InMemoryFileManager implements JavaFileManager {
     public Iterable<JavaFileObject> list(Location location, String packageName,
             Set<Kind> kinds, boolean recurse) throws IOException {
         loggingSwitch.trace(this, "list", location, packageName, kinds, recurse);
-        if (location.equals(StandardLocation.CLASS_PATH) || location.equals(StandardLocation.SOURCE_PATH)) {
+
+        if (location.equals(StandardLocation.CLASS_PATH)
+                || location.equals(StandardLocation.SOURCE_PATH)
+                || location.getName().startsWith("SYSTEM_MODULES[")) {
             var result = new ArrayList<JavaFileObject>();
 
-            for (var availableClassName : availableClasses.tailSet(packageName)) {
-                if (!availableClassName.startsWith(packageName)) {
-                    break;
-                }
+            if (!packageName.isEmpty()) {
+                for (var availableClassName : availableClasses.tailSet(packageName)) {
+                    if (!availableClassName.startsWith(packageName)) {
+                        break;
+                    }
 
-                if (availableClassName.contains("$$Lambda$")) {
-                    loggingSwitch.logln(Level.FINE, "Ignoring lambda class \"{0}\"", availableClassName);
-                    continue;
-                }
+                    if (availableClassName.length() > packageName.length()
+                            && availableClassName.charAt(packageName.length()) != '.') {
+                        break;
+                    }
 
-                /// Remove package name + "."
-                var shortName = availableClassName.substring(packageName.length() + 1);
-                if (!recurse && shortName.contains(".")) {
-                    continue;
-                }
+                    if (availableClassName.contains("$$Lambda$")) {
+                        loggingSwitch.logln(Level.FINE, "Ignoring lambda class \"{0}\"", availableClassName);
+                        continue;
+                    }
 
-                loggingSwitch.logln(Level.FINE, "Pulling class from ClassProvider: \"{0}\"", availableClassName);
-                var found = classprovider.getClass(new ClassIdentifier(availableClassName));
-                if (!found.isEmpty()) {
-                    for (var identified : found) {
-                        var classObject = new InMemoryJavaClassFileObject(availableClassName);
-                        try (var os = classObject.openOutputStream())
-                        {
-                            os.write(identified.getFile());
+                    /// Remove package name + "."
+                    var shortName = availableClassName.substring(packageName.length() + 1);
+                    if (!recurse && shortName.contains(".")) {
+                        continue;
+                    }
+
+                    loggingSwitch.logln(Level.FINE, "Pulling class from ClassProvider: \"{0}\"", availableClassName);
+
+                    var found = classprovider.getClass(new ClassIdentifier(availableClassName));
+                    if (!found.isEmpty()) {
+                        for (var identified : found) {
+                            var classObject = new InMemoryJavaClassFileObject(availableClassName);
+                            try (var os = classObject.openOutputStream())
+                            {
+                                os.write(identified.getFile());
+                            }
+                            result.add(classObject);
+                            nameToBytecode.put(availableClassName, classObject);
                         }
-                        result.add(classObject);
-                        nameToBytecode.put(availableClassName, classObject);
                     }
                 }
             }

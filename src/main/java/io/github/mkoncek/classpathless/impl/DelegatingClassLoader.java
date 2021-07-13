@@ -28,7 +28,7 @@ public class DelegatingClassLoader extends ClassLoader {
     LoggingSwitch loggingSwitch;
 
     public DelegatingClassLoader(ClassLoader delegate, LoggingSwitch loggingSwitch) {
-        super("Delegating_" + delegate.getName(), delegate);
+        super("Delegating" + delegate.getName(), delegate);
         this.loggingSwitch = loggingSwitch;
     }
 

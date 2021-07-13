@@ -20,10 +20,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.regex.Pattern;
 
 /**
- * A simple class to extract package name from an <code>InputStream</code>
+ * A simple class to extract information from an <code>InputStream</code>
  * representing a Java source file.
  *
  * Reads by lines removing comments until the first "{" symbol (start
@@ -34,13 +36,14 @@ import java.util.regex.Pattern;
  * @author Marián Konček
  *
  */
-public class JavaSourcePackageNameReader {
+public class JavaSourceReader {
     public static final Pattern packagePattern = Pattern.compile(
             "package\\s+([^;]*);");
+    private static final Pattern importPattern = Pattern.compile("^import(.*);$");
 
     private BufferedReader br;
 
-    public JavaSourcePackageNameReader(InputStream is) {
+    public JavaSourceReader(InputStream is) {
         this.br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
     }
 
@@ -55,7 +58,7 @@ public class JavaSourcePackageNameReader {
          * @param line The line of text to read.
          * @param insideComment Whether of not this line started inside a block comment.
          */
-        ReadLineResult(final String line, final boolean insideComment) {
+        public ReadLineResult(final String line, final boolean insideComment) {
             int pos = 0;
 
             if (insideComment) {
@@ -160,5 +163,67 @@ public class JavaSourcePackageNameReader {
         }
 
         return textString;
+    }
+
+    /**
+     * Read the package name.
+     * @return Package name or null if none was found.
+     * @throws IOException If an IO error occurs.
+     */
+    public static String readSourcePackage(String source) throws IOException {
+        var text = new StringBuilder();
+
+        boolean insideComment = false;
+        for (String line : source.split("\\R")) {
+            var result = new ReadLineResult(line, insideComment);
+            insideComment = result.insideComment;
+
+            var bracketPos = result.line.indexOf('{');
+            if (bracketPos != -1) {
+                text.append(result.line.substring(0, bracketPos));
+                break;
+            } else {
+                text.append(result.line);
+            }
+
+            text.append(" ");
+        }
+
+        {
+            var ampersandPos = text.indexOf("@");
+            if (ampersandPos != -1) {
+                text.delete(ampersandPos, text.length());
+            }
+        }
+
+        var textString = text.toString();
+
+        var matcher = packagePattern.matcher(textString);
+
+        if (matcher.find()) {
+            textString = matcher.group(1);
+            textString = textString.replaceAll("\\s", "");
+        } else {
+            textString = null;
+        }
+
+        return textString;
+    }
+
+    public static Collection<String> readImports(String source) throws IOException {
+        var result = new ArrayList<String>();
+
+        for (String line : source.split("\\R")) {
+            if (line.contains("{")) {
+                break;
+            }
+
+            var matcher = importPattern.matcher(line);
+            if (matcher.matches()) {
+                result.add(matcher.group(1).replaceAll("\\s", ""));
+            }
+        }
+
+        return result;
     }
 }

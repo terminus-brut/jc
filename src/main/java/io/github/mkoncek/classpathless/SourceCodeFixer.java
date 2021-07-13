@@ -22,32 +22,60 @@ import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.ImportDeclaration;
+import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
-import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
+import org.eclipse.jface.text.Document;
+import org.eclipse.text.edits.InsertEdit;
+import org.eclipse.text.edits.MultiTextEdit;
 
 public class SourceCodeFixer {
-    public static void main(String args[]){
+    public static void main(String args[]) throws Exception {
         ASTParser parser = ASTParser.newParser(AST.JLS_Latest);
-        parser.setSource("import java.util.Set; // comment\n public static final class A { int i = 9;  \n int j; \n ArrayList<Integer> al = new ArrayList<Integer>();j=1000; }".toCharArray());
+
+        final String source = "import java.util..Set; // comment\n public static final class A { int i = 9;  \n int j; \n ArrayList<Integer> al = new ArrayList<Integer>();j=1000; }";
+        parser.setSource(source.toCharArray());
         //parser.setSource("/*abc*/".toCharArray());
         parser.setKind(ASTParser.K_COMPILATION_UNIT);
         //ASTNode node = parser.createAST(null);
 
+        var document = new Document(source);
         final CompilationUnit cu = (CompilationUnit) parser.createAST(null);
+        cu.recordModifications();
+
+        // TextEdit
+
+        var edit = new MultiTextEdit();
+        int offset = -1;
 
         cu.accept(new ASTVisitor() {
 
             Set names = new HashSet();
 
             @Override
+            public boolean visit(ImportDeclaration node) {
+                System.out.println(node.toString());
+                return false;
+            }
+
+            @Override
             public boolean visit(TypeDeclaration node) {
-                var abstractMaker = ASTRewrite.create(cu.getAST());
-                abstractMaker.replace(node, cu, null);
+                if (!node.isInterface()) {
+                    edit.addChild(new InsertEdit(node.getStartPosition(), "abstract "));
+                }
                 System.out.println("typedecl " + node.getStartPosition());
                 System.out.println(node.toString());
-                return true;
+
+                // node.modifiers().add(Modifier.ABSTRACT);
+                for (var f : node.modifiers()) {
+                    var m = (Modifier) f;
+                    System.out.print("HERE ");
+                    System.out.println(m.toString());
+                    System.out.println(m.getClass().toString());
+                }
+                return false;
             }
 
             public boolean visit(VariableDeclarationFragment node) {
@@ -66,7 +94,8 @@ public class SourceCodeFixer {
 
         });
 
-        System.out.println(cu.toString());
-    }
+        edit.apply(document);
 
+        System.out.println(document.get());
+    }
 }

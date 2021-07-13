@@ -32,9 +32,9 @@ import com.beust.jcommander.Parameter;
 import io.github.mkoncek.classpathless.api.ClassIdentifier;
 import io.github.mkoncek.classpathless.api.IdentifiedSource;
 import io.github.mkoncek.classpathless.api.MessagesListener;
-import io.github.mkoncek.classpathless.impl.CompilerJT;
+import io.github.mkoncek.classpathless.impl.CompilerJavac;
 import io.github.mkoncek.classpathless.impl.InMemoryJavaSourceFileObject;
-import io.github.mkoncek.classpathless.impl.JavaSourcePackageNameReader;
+import io.github.mkoncek.classpathless.impl.JavaSourceReader;
 import io.github.mkoncek.classpathless.impl.PrintingMessagesListener;
 
 /**
@@ -68,7 +68,7 @@ public class Tool {
 
         var ccp = new ClasspathClassesProvider(arguments.classpath);
 
-        var compiler = new CompilerJT();
+        var compiler = new CompilerJavac();
 
         var sources = new IdentifiedSource[arguments.inputs.size()];
 
@@ -79,7 +79,7 @@ public class Tool {
 
             String fullyQualifiedName;
             try (var fis = new FileInputStream(inputFile)) {
-                fullyQualifiedName = new JavaSourcePackageNameReader(fis).readSourcePackage();
+                fullyQualifiedName = new JavaSourceReader(fis).readSourcePackage();
             }
 
             {

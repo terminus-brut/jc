@@ -26,6 +26,7 @@ import java.nio.file.Path;
 import javax.tools.SimpleJavaFileObject;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.github.mkoncek.classpathless.api.IdentifiedSource;
 
 /**
  * @author Marián Konček
@@ -37,12 +38,12 @@ public class InMemoryJavaSourceFileObject extends SimpleJavaFileObject {
         super(URI.create("string:///" + name), Kind.SOURCE);
     }
 
-    InMemoryJavaSourceFileObject(String name, String source) {
+    public InMemoryJavaSourceFileObject(String name, String source) {
         this(name);
         this.source = source;
     }
 
-    InMemoryJavaSourceFileObject(String name, InputStream is) throws IOException {
+    public InMemoryJavaSourceFileObject(String name, InputStream is) throws IOException {
         this(name);
         var byteStream = new ByteArrayOutputStream();
         is.transferTo(byteStream);
@@ -52,6 +53,14 @@ public class InMemoryJavaSourceFileObject extends SimpleJavaFileObject {
     @SuppressFBWarnings(value = {"NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"}, justification = "can not see it:(")
     public InMemoryJavaSourceFileObject(Path path) throws IOException {
         this(path.getFileName().toString(), new FileInputStream(path.toFile()));
+    }
+
+    public InMemoryJavaSourceFileObject(IdentifiedSource source) {
+        /// NOTE the JavaFileObject's toUri method needs to return something
+        /// that ends with the proper Java source file name and extension
+        /// otherwise the compiler throws an error
+        this(source.getClassIdentifier().getFullName().replace(".", "/") + ".java",
+                source.getSourceCode());
     }
 
     @Override

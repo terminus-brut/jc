@@ -15,33 +15,95 @@
  */
 package io.github.mkoncek.classpathless.impl;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import io.github.mkoncek.classpathless.api.MessagesListener;
-
 public class LoggingSwitch {
-    public static class NullMessagesListener implements MessagesListener {
-        @Override
-        public void addMessage(Level level, String message) {
-        }
-
-        @Override
-        public void addMessage(Level level, String format, Object... args) {
-        }
-    };
-
-    private PrintStream printer;
-    private MessagesListener compilerMessagesListener;
+    PrintStream printer;
     private boolean tracing = false;
     private java.util.logging.Level logLevel = Level.OFF;
 
-    public LoggingSwitch(PrintStream printer, MessagesListener compilerMessagesListener) {
+    public LoggingSwitch(PrintStream printer) {
         this.printer = printer;
-        this.compilerMessagesListener = compilerMessagesListener;
+    }
+
+    public LoggingSwitch() {
+        var logging = System.getProperty("io.github.mkoncek.cplc.logging");
+        if (logging == null) {
+            printer = new PrintStream(PrintStream.nullOutputStream(), false, StandardCharsets.UTF_8);
+        } else {
+            if (logging.isEmpty()) {
+                printer = System.err;
+            } else {
+                FileOutputStream os;
+                try {
+                    /// TODO not closed if any exception happens
+                    os = new FileOutputStream(Paths.get(logging).toFile(), true);
+                    printer = new PrintStream(os, true, StandardCharsets.UTF_8);
+                } catch (IOException ex) {
+                    throw new UncheckedIOException(ex);
+                }
+            }
+        }
+
+        var level = Level.OFF;
+        var loglevel = System.getProperty("io.github.mkoncek.cplc.loglevel");
+        if (loglevel != null) {
+            switch (loglevel) {
+                case "all":
+                    level = Level.ALL;
+                    break;
+
+                case "finest":
+                    level = Level.FINEST;
+                    break;
+
+                case "finer":
+                    level = Level.FINER;
+                    break;
+
+                case "fine":
+                    level = Level.FINE;
+                    break;
+
+                case "config":
+                    level = Level.CONFIG;
+                    break;
+
+                case "info":
+                    level = Level.INFO;
+                    break;
+
+                case "warning":
+                    level = Level.WARNING;
+                    break;
+
+                case "severe":
+                    level = Level.SEVERE;
+                    break;
+
+                case "off":
+                    level = Level.OFF;
+                    break;
+
+                default :
+                    throw new IllegalArgumentException("Unrecognized logging level: \"" + loglevel + "\"");
+            }
+        }
+
+        setLogLevel(level);
+
+        if (System.getProperty("io.github.mkoncek.cplc.tracing") != null) {
+            setTracing(true);
+        }
     }
 
     public void setTracing(boolean value) {
@@ -70,9 +132,6 @@ public class LoggingSwitch {
         if (logLevel != Level.OFF && level.intValue() >= logLevel.intValue()) {
             var message = "[LOG] " + MessageFormat.format(format, args);
             printer.print(message);
-            if (level == Level.SEVERE) {
-                compilerMessagesListener.addMessage(level, message);
-            }
         }
     }
 

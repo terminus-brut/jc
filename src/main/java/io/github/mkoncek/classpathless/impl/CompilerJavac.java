@@ -15,15 +15,11 @@
  */
 package io.github.mkoncek.classpathless.impl;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.io.UncheckedIOException;
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -47,9 +43,10 @@ import io.github.mkoncek.classpathless.api.MessagesListener;
 /**
  * An implementation using javax.tools compiler API
  */
-public class CompilerJT implements InMemoryCompiler {
+public class CompilerJavac implements InMemoryCompiler {
     private JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     private InMemoryFileManager fileManager;
+    private SourcePreprocessor sourcePreprocessor;
 
     static private class DiagnosticToMessagesListener implements DiagnosticListener<JavaFileObject> {
         MessagesListener listener;
@@ -63,9 +60,10 @@ public class CompilerJT implements InMemoryCompiler {
             var msg = diagnostic.getMessage(Locale.ENGLISH);
             if (listener != null) {
                 listener.addMessage(Level.SEVERE, MessageFormat.format(
-                        "Compiler diagnostic at ({5}) [{0}, {1}]: {2}{3}(code: {4})",
+                        "Compiler diagnostic at {5}[{0}, {1}]: {2}{3}(code: {4})",
                         diagnostic.getLineNumber(), diagnostic.getColumnNumber(), msg,
-                        System.lineSeparator(), diagnostic.getCode(), diagnostic.getSource().getName()));
+                        System.lineSeparator(), diagnostic.getCode(),
+                        (diagnostic.getSource() != null ? "(" + diagnostic.getSource().getName() + ") " : " ")));
             }
 
             if (diagnostic.getCode().equals("compiler.err.does.not.override.abstract")) {
@@ -74,10 +72,15 @@ public class CompilerJT implements InMemoryCompiler {
         }
     }
 
-    public CompilerJT() throws IOException {
+    public CompilerJavac(SourcePreprocessor sourcePreprocessor) throws IOException {
+        this.sourcePreprocessor = sourcePreprocessor;
         System.out.println("new compiler");
         this.fileManager = new InMemoryFileManager(
                 compiler.getStandardFileManager(null, null, null));
+    }
+
+    public CompilerJavac() throws IOException {
+        this(new SourcePreprocessor.NoSourcePreprocessor());
     }
 
     @Override
@@ -89,109 +92,20 @@ public class CompilerJT implements InMemoryCompiler {
 
         System.out.println("compile class");
 
-        try {
-            for (var source : javaSourceFiles) {
-                /// NOTE the JavaFileObject's toUri method needs to return something
-                /// that ends with the proper Java source file name and extension
-                /// otherwise the compiler throws an error
-                var sourceName = source.getClassIdentifier().getFullName();
-                sourceName = sourceName.replace(".", "/") + ".java";
+        var preprocessedSources = sourcePreprocessor.process(Arrays.asList(javaSourceFiles));
 
-                compilationUnits.add(new InMemoryJavaSourceFileObject(
-                        sourceName, source.getSourceCode()));
-            }
-        } catch (UnsupportedEncodingException ex) {
-            throw new RuntimeException(ex);
+        for (var source : preprocessedSources) {
+            compilationUnits.add(new InMemoryJavaSourceFileObject(source));
         }
 
-        var messagesListener = messagesConsumer.orElse(new LoggingSwitch.NullMessagesListener());
-        PrintStream loggerPrinter;
+        var messagesListener = messagesConsumer.orElse(new NullMessagesListener());
 
-        {
-            var logging = System.getProperty("io.github.mkoncek.cplc.logging");
-            if (logging == null) {
-                loggerPrinter = new PrintStream(PrintStream.nullOutputStream(), false, StandardCharsets.UTF_8);
-            } else {
-                if (logging.isEmpty()) {
-                    loggerPrinter = System.err;
-                } else {
-                    FileOutputStream os;
-                    try {
-                        /// TODO not closed if any exception happens
-                        os = new FileOutputStream(Paths.get(logging).toFile(), true);
-                        loggerPrinter = new PrintStream(os, true, StandardCharsets.UTF_8);
-                    } catch (IOException ex) {
-                        throw new UncheckedIOException(ex);
-                    }
-                }
-            }
-        }
-
-        var loggingSwitch = new LoggingSwitch(loggerPrinter, messagesListener);
-
-        {
-            var level = Level.OFF;
-            var loglevel = System.getProperty("io.github.mkoncek.cplc.loglevel");
-            if (loglevel != null) {
-                switch (loglevel) {
-                    case "all":
-                        level = Level.ALL;
-                        break;
-
-                    case "finest":
-                        level = Level.FINEST;
-                        break;
-
-                    case "finer":
-                        level = Level.FINER;
-                        break;
-
-                    case "fine":
-                        level = Level.FINE;
-                        break;
-
-                    case "config":
-                        level = Level.CONFIG;
-                        break;
-
-                    case "info":
-                        level = Level.INFO;
-                        break;
-
-                    case "warning":
-                        level = Level.WARNING;
-                        break;
-
-                    case "severe":
-                        level = Level.SEVERE;
-                        break;
-
-                    case "off":
-                        level = Level.OFF;
-                        break;
-
-                    default :
-                        throw new IllegalArgumentException("Unrecognized logging level: \"" + loglevel + "\"");
-                }
-            }
-
-            loggingSwitch.setLogLevel(level);
-        }
-
-        if (System.getProperty("io.github.mkoncek.cplc.tracing") != null) {
-            loggingSwitch.setTracing(true);
-        }
-
-        var classOutputs = new ArrayList<JavaFileObject>();
         fileManager.setClassProvider(classprovider);
 
         var availableClasses = new TreeSet<>(classprovider.getClassPathListing());
 
         fileManager.setAvailableClasses(availableClasses);
-
-        loggerPrinter.println(availableClasses);
-
-        fileManager.setLoggingSwitch(loggingSwitch);
+        fileManager.setLoggingSwitch(new LoggingSwitch());
 
         if (!compiler.getTask(
                 null,
@@ -205,6 +119,7 @@ public class CompilerJT implements InMemoryCompiler {
         }
 
         var result = new ArrayList<IdentifiedBytecode>();
+        var classOutputs = new ArrayList<JavaFileObject>();
 
         fileManager.clearAndGetOutput(classOutputs);
 
