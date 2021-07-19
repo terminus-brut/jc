@@ -58,7 +58,9 @@ public class Tool {
 
     public static void main(String[] args) throws IOException {
         var arguments = new Arguments();
-        var jcommander = JCommander.newBuilder().addObject(arguments).build();
+
+        var jcommander = new JCommander();
+        jcommander.addObject(arguments);
         jcommander.parse(args);
 
         if (arguments.help) {
@@ -86,8 +88,6 @@ public class Tool {
                 var classPath = Paths.get(inputFile).getFileName();
                 if (classPath != null) {
                     var className = classPath.toString();
-                    System.out.print("className ");
-                    System.out.println(className);
                     /// Remove ".java"
                     className = className.substring(0, className.length() - 5);
                     if (fullyQualifiedName == null) {
@@ -105,10 +105,6 @@ public class Tool {
             var content = sourceObject.getCharContent(true).toString().getBytes(StandardCharsets.UTF_8);
 
             sources[i] = new IdentifiedSource(sourceIdentifier, content);
-        }
-
-        for (var src : sources) {
-            System.out.println("getFullName " + src.getClassIdentifier().getFullName());
         }
 
         Optional<MessagesListener> messagesListener = Optional.of(new PrintingMessagesListener());
