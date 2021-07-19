@@ -13,24 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.mkoncek.classpathless.impl;
-
-import java.util.Collection;
-
-import io.github.mkoncek.classpathless.api.IdentifiedSource;
+package io.github.mkoncek.classpathless.api;
 
 public interface SourcePreprocessor {
-    Collection<IdentifiedSource> process(Collection<IdentifiedSource> sources);
+    IdentifiedSource preprocess(IdentifiedSource source);
 
-    public static class NoSourcePreprocessor implements SourcePreprocessor {
+    public static class NullSourcePreprocessor implements SourcePreprocessor {
         @Override
-        public Collection<IdentifiedSource> process(Collection<IdentifiedSource> sources) {
-            for (var source : sources) {
-                // System.out.print("from preprocessor ");
-                // System.out.println(source.getClassIdentifier().getFullName());
-            }
-
-            return sources;
+        public IdentifiedSource preprocess(IdentifiedSource source) {
+            return source;
         }
     }
 }
