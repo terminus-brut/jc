@@ -119,14 +119,12 @@ public class InMemoryFileManager implements JavaFileManager {
         Iterable<Set<Location>> result;
         result = delegate.listLocationsForModules(location);
 
-        if (location.equals(StandardLocation.SYSTEM_MODULES)) {
-            if (!arguments.useHostJavaClasses()) {
-                for (var set : result) {
-                    for (var loc : set) {
-                        if (loc.getName().equals("SYSTEM_MODULES[java.base]")) {
-                            result = Arrays.asList(Set.of(loc));
-                            break;
-                        }
+        if (location.equals(StandardLocation.SYSTEM_MODULES) && !arguments.useHostJavaClasses()) {
+            for (var set : result) {
+                for (var loc : set) {
+                    if (loc.getName().equals("SYSTEM_MODULES[java.base]")) {
+                        result = Arrays.asList(Set.of(loc));
+                        break;
                     }
                 }
             }
@@ -243,7 +241,7 @@ public class InMemoryFileManager implements JavaFileManager {
         loggingSwitch.trace(this, "inferBinaryName", location, file);
         if (file instanceof InMemoryJavaClassFileObject) {
             var realFile = (InMemoryJavaClassFileObject) file;
-            var result = realFile.identifiedName();
+            var result = realFile.getClassIdentifier().getFullName();
             loggingSwitch.trace(result);
             return result;
         } else {
@@ -259,7 +257,6 @@ public class InMemoryFileManager implements JavaFileManager {
         loggingSwitch.trace(this, "list", location, packageName, kinds, recurse);
 
         if (location.equals(StandardLocation.CLASS_PATH)
-                || location.equals(StandardLocation.SOURCE_PATH)
                 || (!arguments.useHostJavaClasses()
                         && location.getName().equals("SYSTEM_MODULES[java.base]"))) {
             var result = new ArrayList<JavaFileObject>();

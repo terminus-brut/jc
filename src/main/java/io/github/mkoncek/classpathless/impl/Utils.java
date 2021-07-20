@@ -25,17 +25,17 @@ import io.github.mkoncek.classpathless.api.ClassesProvider;
 
 public class Utils {
     static Collection<InMemoryJavaClassFileObject> loadClasses(SortedSet<String> availableClasses,
-            String importName, boolean recurse, ClassesProvider classprovider,
+            String packageName, boolean recurse, ClassesProvider classprovider,
             LoggingSwitch loggingSwitch) throws IOException {
         var result = new ArrayList<InMemoryJavaClassFileObject>();
 
-        for (var availableClassName : availableClasses.tailSet(importName)) {
-            if (!availableClassName.startsWith(importName)) {
+        for (var availableClassName : availableClasses.tailSet(packageName)) {
+            if (!availableClassName.startsWith(packageName)) {
                 break;
             }
 
-            if (availableClassName.length() > importName.length() + 1) {
-                if (availableClassName.substring(importName.length() + 1).contains(".") && !recurse) {
+            if (availableClassName.length() > packageName.length() + 1) {
+                if (availableClassName.substring(packageName.length() + 1).contains(".") && !recurse) {
                     loggingSwitch.logln(Level.FINEST, "Skipping over class from a subpackage from ClassProvider: \"{0}\"", availableClassName);
                     continue;
                 }

@@ -15,13 +15,14 @@
  */
 package io.github.mkoncek.classpathless.api;
 
-public interface SourcePreprocessor {
-    IdentifiedSource preprocess(IdentifiedSource source);
+public class CompilationError {
+    public final long lineNum;
+    public final long columnNum;
+    public final String errorCode;
 
-    public static class Null implements SourcePreprocessor {
-        @Override
-        public IdentifiedSource preprocess(IdentifiedSource source) {
-            return source;
-        }
+    public CompilationError(long lineNum, long columnNum, String errorCode) {
+        this.lineNum = lineNum;
+        this.columnNum = columnNum;
+        this.errorCode = errorCode;
     }
 }

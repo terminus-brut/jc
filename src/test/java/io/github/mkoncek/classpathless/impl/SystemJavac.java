@@ -13,15 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.mkoncek.classpathless.api;
+package io.github.mkoncek.classpathless.impl;
 
-public interface SourcePreprocessor {
-    IdentifiedSource preprocess(IdentifiedSource source);
+import java.nio.charset.StandardCharsets;
 
-    public static class Null implements SourcePreprocessor {
-        @Override
-        public IdentifiedSource preprocess(IdentifiedSource source) {
-            return source;
+import javax.tools.JavaCompiler;
+import javax.tools.StandardJavaFileManager;
+import javax.tools.ToolProvider;
+
+public class SystemJavac {
+    private JavaCompiler javac = ToolProvider.getSystemJavaCompiler();
+    private StandardJavaFileManager fm = javac.getStandardFileManager(null, null, StandardCharsets.UTF_8);
+
+    void compile(String... sources) {
+        if (!javac.getTask(null, fm, null, null, null, fm.getJavaFileObjects(sources)).call()) {
+            throw new RuntimeException("Compilation failed");
         }
     }
 }

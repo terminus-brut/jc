@@ -13,15 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.mkoncek.classpathless.api;
+package io.github.mkoncek.classpathless.impl;
 
-public interface SourcePreprocessor {
-    IdentifiedSource preprocess(IdentifiedSource source);
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-    public static class Null implements SourcePreprocessor {
-        @Override
-        public IdentifiedSource preprocess(IdentifiedSource source) {
-            return source;
-        }
+import org.junit.jupiter.api.Test;
+
+public class SourcePreprocessorImplTest {
+    @Test
+    public void testsanitizeImports() {
+        assertEquals("import com.google.gson.internal.$Gson$Preconditions;",
+                SourcePreprocessorImpl.sanitizeImports("import com.google.gson.internal..Gson.Preconditions;"));
     }
 }

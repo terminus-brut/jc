@@ -24,15 +24,13 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
 
-import javax.tools.SimpleJavaFileObject;
-
 import io.github.mkoncek.classpathless.api.ClassIdentifier;
 import io.github.mkoncek.classpathless.api.ClassesProvider;
 
 /**
  * @author Marián Konček
  */
-public class InMemoryJavaClassFileObject extends SimpleJavaFileObject {
+public class InMemoryJavaClassFileObject extends IdentifiedJavaFileObject {
     private LoggingSwitch loggingSwitch;
     private ClassesProvider classProvider;
     private ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
@@ -47,8 +45,9 @@ public class InMemoryJavaClassFileObject extends SimpleJavaFileObject {
         this(name, classProvider, new LoggingSwitch.Null());
     }
 
-    String identifiedName() {
-        return toUri().toString().substring(9);
+    @Override
+    ClassIdentifier getClassIdentifier() {
+        return new ClassIdentifier(toUri().toString().substring(9));
     }
 
     @Override
@@ -69,7 +68,7 @@ public class InMemoryJavaClassFileObject extends SimpleJavaFileObject {
         loggingSwitch.trace(this, "openInputStream");
 
         if (classProvider != null) {
-            var bytecodes = classProvider.getClass(new ClassIdentifier(identifiedName()));
+            var bytecodes = classProvider.getClass(getClassIdentifier());
 
             if (bytecodes.size() == 1) {
                 loggingSwitch.logln(Level.FINEST, "Found bytecode for {0}", this);

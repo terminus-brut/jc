@@ -21,10 +21,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import org.junit.jupiter.api.Test;
 
 public class InMemoryJavaClassFileObjectTest {
+    private static final SystemJavac javac = new SystemJavac();
+
     @Test
     void testConstructor() {
         var obj = new InMemoryJavaClassFileObject("Hello.class", new NullClassesProvider());
@@ -32,9 +36,15 @@ public class InMemoryJavaClassFileObjectTest {
     }
 
     @Test
-    void testContent() {
+    void testContent() throws IOException {
         var obj = new InMemoryJavaClassFileObject("Hello.class", new NullClassesProvider());
-        try (var is = new FileInputStream("src/test/resources/io/github/mkoncek/classpathless/impl/SimpleHello/Hello.class")) {
+        String classFile = "src/test/resources/io/github/mkoncek/classpathless/impl/simple-class/Hello.class";
+
+        Files.deleteIfExists(Paths.get(classFile));
+
+        javac.compile("src/test/resources/io/github/mkoncek/classpathless/impl/simple-class/Hello.java");
+
+        try (var is = new FileInputStream(classFile)) {
             var fileContent = is.readAllBytes();
             obj.openOutputStream().write(fileContent);
 

@@ -17,13 +17,13 @@ package io.github.mkoncek.classpathless.impl;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Level;
 
@@ -35,10 +35,12 @@ import javax.tools.ToolProvider;
 
 import io.github.mkoncek.classpathless.api.ClassIdentifier;
 import io.github.mkoncek.classpathless.api.ClassesProvider;
+import io.github.mkoncek.classpathless.api.CompilationError;
 import io.github.mkoncek.classpathless.api.IdentifiedBytecode;
 import io.github.mkoncek.classpathless.api.IdentifiedSource;
 import io.github.mkoncek.classpathless.api.InMemoryCompiler;
 import io.github.mkoncek.classpathless.api.MessagesListener;
+import io.github.mkoncek.classpathless.api.SourcePostprocessor;
 
 /**
  * An implementation using javax.tools compiler API
@@ -47,27 +49,37 @@ public class CompilerJavac implements InMemoryCompiler {
     private JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     private InMemoryFileManager fileManager;
     private Arguments arguments;
+    private SourcePostprocessor postprocessor = new SourcePostprocessor.Null();
+
+    private static ClassIdentifier getIdentifier(JavaFileObject object) {
+        /// Remove the leading "/"
+        return new ClassIdentifier(object.getName().substring(1));
+    }
 
     static private class DiagnosticToMessagesListener implements DiagnosticListener<JavaFileObject> {
         MessagesListener listener;
+        Map<ClassIdentifier, Collection<CompilationError>> compilationErrors;
 
         DiagnosticToMessagesListener(MessagesListener listener) {
             this.listener = listener;
+            this.compilationErrors = new TreeMap<>();
         }
 
         @Override
         public void report(Diagnostic<? extends JavaFileObject> diagnostic) {
             var msg = diagnostic.getMessage(Locale.ENGLISH);
-            if (listener != null) {
-                listener.addMessage(Level.SEVERE, MessageFormat.format(
-                        "Compiler diagnostic at {5}[{0}, {1}]: {2}{3}(code: {4})",
-                        diagnostic.getLineNumber(), diagnostic.getColumnNumber(), msg,
-                        System.lineSeparator(), diagnostic.getCode(),
-                        (diagnostic.getSource() != null ? "(" + diagnostic.getSource().getName() + ") " : " ")));
+
+            var source = diagnostic.getSource();
+            if (source != null) {
+                compilationErrors.computeIfAbsent(getIdentifier(source), k -> new ArrayList<>())
+                .add(new CompilationError(diagnostic.getLineNumber(), diagnostic.getColumnNumber(), diagnostic.getCode()));
             }
 
-            if (diagnostic.getCode().equals("compiler.err.does.not.override.abstract")) {
-                /// TODO try to make the class abstract and recompile
+            if (listener != null) {
+                listener.addMessage(Level.SEVERE, "Compiler diagnostic at {5}[{0}, {1}]: {2}{3}(code: {4})",
+                        diagnostic.getLineNumber(), diagnostic.getColumnNumber(), msg,
+                        System.lineSeparator(), diagnostic.getCode(),
+                        (source != null ? "(" + source.getName() + ") " : " "));
             }
         }
     }
@@ -79,7 +91,16 @@ public class CompilerJavac implements InMemoryCompiler {
     }
 
     public CompilerJavac() {
-        this(new Arguments());
+        this(new Arguments().useHostJavaClasses(true));
+    }
+
+    @Override
+    public void setPostProcessor(SourcePostprocessor postprocessor) {
+        if (postprocessor == null) {
+            postprocessor = new SourcePostprocessor.Null();
+        }
+
+        this.postprocessor = postprocessor;
     }
 
     @Override
@@ -87,7 +108,7 @@ public class CompilerJavac implements InMemoryCompiler {
             ClassesProvider classprovider,
             Optional<MessagesListener> messagesConsumer,
             IdentifiedSource... javaSourceFiles) {
-        final List<JavaFileObject> compilationUnits = new ArrayList<>();
+        Collection<InMemoryJavaSourceFileObject> compilationUnits = new ArrayList<>();
 
         for (var source : Arrays.asList(javaSourceFiles)) {
             compilationUnits.add(new InMemoryJavaSourceFileObject(source));
@@ -100,18 +121,36 @@ public class CompilerJavac implements InMemoryCompiler {
         var availableClasses = new TreeSet<>(classprovider.getClassPathListing());
 
         fileManager.setAvailableClasses(availableClasses);
-        fileManager.setLoggingSwitch(new LoggingSwitch());
+        var loggingSwitch = new LoggingSwitch();
+        fileManager.setLoggingSwitch(loggingSwitch);
         fileManager.setArguments(arguments);
 
-        if (!compiler.getTask(
-                null,
-                fileManager,
-                new DiagnosticToMessagesListener(messagesListener),
-                null,
-                null,
-                compilationUnits)
-                .call()) {
-            throw new RuntimeException("Could not compile file");
+        for (boolean sourcesChanged = true; sourcesChanged;) {
+            sourcesChanged = false;
+            var diagnosticListener = new DiagnosticToMessagesListener(messagesListener);
+
+            if (compiler.getTask(
+                    null, fileManager, diagnosticListener, null, null, compilationUnits).call()) {
+                break;
+            }
+
+            messagesListener.addMessage(Level.SEVERE, "Compilation failed");
+            for (var entry : diagnosticListener.compilationErrors.entrySet()) {
+                for (var cu : compilationUnits) {
+                    if (entry.getKey().equals(cu.getClassIdentifier())) {
+                        var result = postprocessor.postprocess(cu.getIdentifiedSource(), entry.getValue());
+                        if (result.changed) {
+                            sourcesChanged = true;
+                            messagesListener.addMessage(Level.INFO, "SourcePostprocessor: reloading the source code of {0}", cu.getClassIdentifier().getFullName());
+                            cu.setSource(result.source.getSourceCode());
+                        }
+                    }
+                }
+            }
+
+            if (!sourcesChanged) {
+                throw new RuntimeException("Could not compile file");
+            }
         }
 
         var result = new ArrayList<IdentifiedBytecode>();
@@ -120,15 +159,13 @@ public class CompilerJavac implements InMemoryCompiler {
         fileManager.clearAndGetOutput(classOutputs);
 
         for (final var classOutput : classOutputs) {
-            /// Remove the leading "/"
-            var identifier = new ClassIdentifier(classOutput.getName().substring(1));
             byte[] content;
             try {
                 content = classOutput.openInputStream().readAllBytes();
             } catch (IOException ex) {
                 throw new UncheckedIOException(ex);
             }
-            result.add(new IdentifiedBytecode(identifier, content));
+            result.add(new IdentifiedBytecode(getIdentifier(classOutput), content));
         }
 
         fileManager.setClassProvider(null);

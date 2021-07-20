@@ -23,16 +23,15 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
-import javax.tools.SimpleJavaFileObject;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.github.mkoncek.classpathless.api.ClassIdentifier;
 import io.github.mkoncek.classpathless.api.IdentifiedSource;
 
 /**
  * @author Marián Konček
  */
-public class InMemoryJavaSourceFileObject extends SimpleJavaFileObject {
-    String source;
+public class InMemoryJavaSourceFileObject extends IdentifiedJavaFileObject {
+    private String source;
 
     protected InMemoryJavaSourceFileObject(String name) {
         super(URI.create("string:///" + name), Kind.SOURCE);
@@ -47,7 +46,20 @@ public class InMemoryJavaSourceFileObject extends SimpleJavaFileObject {
         this(name);
         var byteStream = new ByteArrayOutputStream();
         is.transferTo(byteStream);
-        this.source = byteStream.toString(StandardCharsets.US_ASCII);
+        this.source = byteStream.toString(StandardCharsets.UTF_8);
+    }
+
+    @Override
+    ClassIdentifier getClassIdentifier() {
+        return new ClassIdentifier(toUri().toString().substring(10));
+    }
+
+    IdentifiedSource getIdentifiedSource() {
+        return new IdentifiedSource(getClassIdentifier(), source.getBytes(StandardCharsets.UTF_8));
+    }
+
+    void setSource(String source) {
+        this.source = source;
     }
 
     @SuppressFBWarnings(value = {"NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"}, justification = "can not see it:(")

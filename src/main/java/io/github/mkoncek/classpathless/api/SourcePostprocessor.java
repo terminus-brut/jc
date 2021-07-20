@@ -15,13 +15,25 @@
  */
 package io.github.mkoncek.classpathless.api;
 
-public interface SourcePostprocessor {
-    IdentifiedSource postprocess(long lineNum, long columnNum, String reasonCode, IdentifiedSource source);
+import java.util.Collection;
 
-    public static class NullSourcePostprocessor implements SourcePostprocessor {
+public interface SourcePostprocessor {
+    static final class Result {
+        public final IdentifiedSource source;
+        public final boolean changed;
+
+        public Result(IdentifiedSource source, boolean changed) {
+            this.source = source;
+            this.changed = changed;
+        }
+    }
+
+    Result postprocess(IdentifiedSource source, Collection<CompilationError> compilationErrors);
+
+    static class Null implements SourcePostprocessor {
         @Override
-        public IdentifiedSource postprocess(long lineNum, long columnNum, String reasonCode, IdentifiedSource source) {
-            return source;
+        public Result postprocess(IdentifiedSource source, Collection<CompilationError> compilationErrors) {
+            return new Result(source, false);
         }
     }
 }

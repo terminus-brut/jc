@@ -13,15 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.mkoncek.classpathless.api;
+package io.github.mkoncek.classpathless.impl;
 
-public interface SourcePreprocessor {
-    IdentifiedSource preprocess(IdentifiedSource source);
+import java.net.URI;
 
-    public static class Null implements SourcePreprocessor {
-        @Override
-        public IdentifiedSource preprocess(IdentifiedSource source) {
-            return source;
-        }
+import javax.tools.SimpleJavaFileObject;
+
+import io.github.mkoncek.classpathless.api.ClassIdentifier;
+
+public abstract class IdentifiedJavaFileObject extends SimpleJavaFileObject {
+    protected IdentifiedJavaFileObject(URI uri, Kind kind) {
+        super(uri, kind);
     }
+
+    abstract ClassIdentifier getClassIdentifier();
 }

@@ -20,7 +20,7 @@ import java.util.Objects;
 /**
  * Wrapper around fully qualified class name.
  */
-public class ClassIdentifier {
+public class ClassIdentifier implements Comparable<ClassIdentifier> {
     private final String fullName;
 
     public ClassIdentifier(String fullName) {
@@ -47,5 +47,10 @@ public class ClassIdentifier {
     @Override
     public String toString() {
         return fullName;
+    }
+
+    @Override
+    public int compareTo(ClassIdentifier o) {
+        return fullName.compareTo(o.fullName);
     }
 }

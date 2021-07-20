@@ -19,17 +19,12 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.FileInputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.TreeSet;
-
-import javax.tools.JavaCompiler;
-import javax.tools.StandardJavaFileManager;
-import javax.tools.ToolProvider;
 
 import org.junit.jupiter.api.Test;
 
@@ -38,8 +33,7 @@ import io.github.mkoncek.classpathless.api.IdentifiedSource;
 import io.github.mkoncek.classpathless.api.MessagesListener;
 
 public class CompilerJavacTest {
-    private JavaCompiler javac = ToolProvider.getSystemJavaCompiler();
-    private StandardJavaFileManager fm = javac.getStandardFileManager(null, null, StandardCharsets.UTF_8);
+    private static final SystemJavac javac = new SystemJavac();
     private static final Optional<MessagesListener> printingListener = Optional.of(new PrintingMessagesListener());
     private static final Comparator<byte[]> byteArrayComparator = (byte[] lhs, byte[] rhs) -> Arrays.compare(lhs, rhs);
 
@@ -56,15 +50,14 @@ public class CompilerJavacTest {
         var expectedBytecodeContents = new TreeSet<byte[]>(byteArrayComparator);
 
         var classes = new String[] {
-                "src/test/resources/io/github/mkoncek/classpathless/impl/SimpleHello/Hello.class",
+                "src/test/resources/io/github/mkoncek/classpathless/impl/simple-class/Hello.class",
         };
 
         for (var cf : classes) {
             Files.deleteIfExists(Paths.get(cf));
         }
 
-        javac.getTask(null, fm, null, null, null, fm.getJavaFileObjects(
-                "src/test/resources/io/github/mkoncek/classpathless/impl/SimpleHello/Hello.java")).call();
+        javac.compile("src/test/resources/io/github/mkoncek/classpathless/impl/simple-class/Hello.java");
 
         for (var cf : classes) {
             try (var is = new FileInputStream(cf)) {
@@ -73,7 +66,7 @@ public class CompilerJavacTest {
         }
 
         byte[] content;
-        try (var is = new FileInputStream("src/test/resources/io/github/mkoncek/classpathless/impl/SimpleHello/Hello.java")) {
+        try (var is = new FileInputStream("src/test/resources/io/github/mkoncek/classpathless/impl/simple-class/Hello.java")) {
             content = is.readAllBytes();
         }
 
@@ -104,16 +97,15 @@ public class CompilerJavacTest {
         var expectedBytecodeContents = new TreeSet<byte[]>(byteArrayComparator);
 
         var classes = new String[] {
-                "src/test/resources/io/github/mkoncek/classpathless/impl/NestedHello/Hello.class",
-                "src/test/resources/io/github/mkoncek/classpathless/impl/NestedHello/Hello$Inner.class",
+                "src/test/resources/io/github/mkoncek/classpathless/impl/nested-class/Hello.class",
+                "src/test/resources/io/github/mkoncek/classpathless/impl/nested-class/Hello$Inner.class",
         };
 
         for (var cf : classes) {
             Files.deleteIfExists(Paths.get(cf));
         }
 
-        javac.getTask(null, fm, null, null, null, fm.getJavaFileObjects(
-                "src/test/resources/io/github/mkoncek/classpathless/impl/NestedHello/Hello.java")).call();
+        javac.compile("src/test/resources/io/github/mkoncek/classpathless/impl/nested-class/Hello.java");
 
         for (var cf : classes) {
             try (var is = new FileInputStream(cf)) {
@@ -122,7 +114,7 @@ public class CompilerJavacTest {
         }
 
         byte[] content;
-        try (var is = new FileInputStream("src/test/resources/io/github/mkoncek/classpathless/impl/NestedHello/Hello.java")) {
+        try (var is = new FileInputStream("src/test/resources/io/github/mkoncek/classpathless/impl/nested-class/Hello.java")) {
             content = is.readAllBytes();
         }
 
@@ -152,17 +144,16 @@ public class CompilerJavacTest {
         var expectedBytecodeContents = new TreeSet<byte[]>(byteArrayComparator);
 
         var classes = new String[] {
-                "src/test/resources/io/github/mkoncek/classpathless/impl/AnonymousHello/Hello.class",
-                "src/test/resources/io/github/mkoncek/classpathless/impl/AnonymousHello/Hello$1.class",
-                "src/test/resources/io/github/mkoncek/classpathless/impl/AnonymousHello/Hello$InnerInterface.class",
+                "src/test/resources/io/github/mkoncek/classpathless/impl/anonymous-inner-class/Hello.class",
+                "src/test/resources/io/github/mkoncek/classpathless/impl/anonymous-inner-class/Hello$1.class",
+                "src/test/resources/io/github/mkoncek/classpathless/impl/anonymous-inner-class/Hello$InnerInterface.class",
         };
 
         for (var cf : classes) {
             Files.deleteIfExists(Paths.get(cf));
         }
 
-        javac.getTask(null, fm, null, null, null, fm.getJavaFileObjects(
-                "src/test/resources/io/github/mkoncek/classpathless/impl/AnonymousHello/Hello.java")).call();
+        javac.compile("src/test/resources/io/github/mkoncek/classpathless/impl/anonymous-inner-class/Hello.java");
 
         for (var cf : classes) {
             try (var is = new FileInputStream(cf)) {
@@ -171,7 +162,7 @@ public class CompilerJavacTest {
         }
 
         byte[] content;
-        try (var is = new FileInputStream("src/test/resources/io/github/mkoncek/classpathless/impl/AnonymousHello/Hello.java")) {
+        try (var is = new FileInputStream("src/test/resources/io/github/mkoncek/classpathless/impl/anonymous-inner-class/Hello.java")) {
             content = is.readAllBytes();
         }
 
@@ -204,17 +195,16 @@ public class CompilerJavacTest {
             var expectedBytecodeContents = new TreeSet<byte[]>(byteArrayComparator);
 
             var classes = new String[] {
-                    "src/test/resources/io/github/mkoncek/classpathless/impl/AnonymousHello/Hello.class",
-                    "src/test/resources/io/github/mkoncek/classpathless/impl/AnonymousHello/Hello$1.class",
-                    "src/test/resources/io/github/mkoncek/classpathless/impl/AnonymousHello/Hello$InnerInterface.class",
+                    "src/test/resources/io/github/mkoncek/classpathless/impl/anonymous-inner-class/Hello.class",
+                    "src/test/resources/io/github/mkoncek/classpathless/impl/anonymous-inner-class/Hello$1.class",
+                    "src/test/resources/io/github/mkoncek/classpathless/impl/anonymous-inner-class/Hello$InnerInterface.class",
             };
 
             for (var cf : classes) {
                 Files.deleteIfExists(Paths.get(cf));
             }
 
-            javac.getTask(null, fm, null, null, null, fm.getJavaFileObjects(
-                    "src/test/resources/io/github/mkoncek/classpathless/impl/AnonymousHello/Hello.java")).call();
+            javac.compile("src/test/resources/io/github/mkoncek/classpathless/impl/anonymous-inner-class/Hello.java");
 
             for (var cf : classes) {
                 try (var is = new FileInputStream(cf)) {
@@ -223,7 +213,7 @@ public class CompilerJavacTest {
             }
 
             byte[] content;
-            try (var is = new FileInputStream("src/test/resources/io/github/mkoncek/classpathless/impl/AnonymousHello/Hello.java")) {
+            try (var is = new FileInputStream("src/test/resources/io/github/mkoncek/classpathless/impl/anonymous-inner-class/Hello.java")) {
                 content = is.readAllBytes();
             }
 
