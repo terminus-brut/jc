@@ -17,6 +17,7 @@ package io.github.mkoncek.classpathless.impl;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -76,10 +77,10 @@ public class CompilerJavac implements InMemoryCompiler {
             }
 
             if (listener != null) {
-                listener.addMessage(Level.SEVERE, "Compiler diagnostic at {5}[{0}, {1}]: {2}{3}(code: {4})",
+                listener.addMessage(Level.SEVERE, MessageFormat.format("Compiler diagnostic at {5}[{0}, {1}]: {2}{3}(code: {4})",
                         diagnostic.getLineNumber(), diagnostic.getColumnNumber(), msg,
                         System.lineSeparator(), diagnostic.getCode(),
-                        (source != null ? "(" + source.getName() + ") " : " "));
+                        (source != null ? "(" + source.getName() + ") " : " ")));
             }
         }
     }
