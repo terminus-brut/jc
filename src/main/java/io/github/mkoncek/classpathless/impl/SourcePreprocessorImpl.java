@@ -15,34 +15,22 @@
  */
 package io.github.mkoncek.classpathless.impl;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.StringReader;
-import java.io.UncheckedIOException;
-
-// import com.google.gson.internal.$Gson$Preconditions;
-// import com.google.gson.internal..Gson.Preconditions;
-
 public class SourcePreprocessorImpl {
     static String sanitizeImports(String source) {
-        String resultContent = "";
+        var resultContent = new StringBuilder();
 
-        try (var reader = new BufferedReader(new StringReader(source))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.startsWith("import ") && line.endsWith(";")) {
-                    int pos = line.indexOf("..");
-                    if (pos > 0) {
-                        line = line.substring(0, pos + 1) + line.substring(pos + 1).replace('.', '$');
-                    }
+        for (var line : source.split("\\R")) {
+            if (line.startsWith("import ") && line.endsWith(";")) {
+                int pos = line.indexOf("..");
+                if (pos > 0) {
+                    line = line.substring(0, pos + 1) + line.substring(pos + 1).replace('.', '$');
                 }
-
-                resultContent += line;
             }
-        } catch (IOException ex) {
-            throw new UncheckedIOException(ex);
+
+            resultContent.append(line);
+            resultContent.append(System.lineSeparator());
         }
 
-        return resultContent;
+        return resultContent.toString();
     }
 }

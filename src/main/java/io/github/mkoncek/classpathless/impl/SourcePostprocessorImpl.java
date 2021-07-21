@@ -65,15 +65,4 @@ public class SourcePostprocessorImpl implements SourcePostprocessor {
 
         return result;
     }
-
-    public static void main(String[] args) {
-        String lol = "dasdasd\nerjferf\r\nasdasdad\n\n\ndewdewd";
-
-        for (var line : lol.split("\\R")) {
-            System.out.print("\"");
-            System.out.print(line);
-            System.out.print("\"");
-            System.out.println();
-        }
-    }
 }
