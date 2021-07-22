@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Test;
 import io.github.mkoncek.classpathless.api.ClassIdentifier;
 import io.github.mkoncek.classpathless.api.IdentifiedBytecode;
 import io.github.mkoncek.classpathless.api.IdentifiedSource;
+import io.github.mkoncek.classpathless.impl.postprocessors.AddAbstract;
 
 public class SourcePostprocessorImplTest {
     private static final SystemJavac javac = new SystemJavac();
@@ -80,7 +81,7 @@ public class SourcePostprocessorImplTest {
         }
 
         var cplc = new CompilerJavac();
-        cplc.setPostProcessor(new SourcePostprocessorImpl());
+        cplc.setPostProcessor(new AddAbstract());
 
         var provider = new SimpleClassesProvider(classes);
 

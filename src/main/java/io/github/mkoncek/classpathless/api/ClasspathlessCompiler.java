@@ -18,7 +18,7 @@ package io.github.mkoncek.classpathless.api;
 import java.util.Collection;
 import java.util.Optional;
 
-public interface InMemoryCompiler {
+public interface ClasspathlessCompiler {
     static class Arguments {
         private boolean useHostJavaClasses = true;
 
@@ -41,6 +41,4 @@ public interface InMemoryCompiler {
      */
     Collection<IdentifiedBytecode> compileClass(ClassesProvider classprovider,
             Optional<MessagesListener> messagesConsummer, IdentifiedSource... javaSourceFiles);
-
-    void setPostProcessor(SourcePostprocessor postprocessor);
 }

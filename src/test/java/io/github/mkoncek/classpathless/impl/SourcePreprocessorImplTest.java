@@ -23,6 +23,6 @@ public class SourcePreprocessorImplTest {
     @Test
     public void testsanitizeImports() {
         assertEquals("import com.google.gson.internal.$Gson$Preconditions;" + System.lineSeparator(),
-                SourcePreprocessorImpl.sanitizeImports("import com.google.gson.internal..Gson.Preconditions;"));
+                SourcePreprocessorImpl.fixImports("import com.google.gson.internal..Gson.Preconditions;"));
     }
 }

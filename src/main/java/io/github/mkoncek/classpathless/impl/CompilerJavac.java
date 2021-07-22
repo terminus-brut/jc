@@ -17,7 +17,6 @@ package io.github.mkoncek.classpathless.impl;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -36,17 +35,17 @@ import javax.tools.ToolProvider;
 
 import io.github.mkoncek.classpathless.api.ClassIdentifier;
 import io.github.mkoncek.classpathless.api.ClassesProvider;
+import io.github.mkoncek.classpathless.api.ClasspathlessCompiler;
 import io.github.mkoncek.classpathless.api.CompilationError;
 import io.github.mkoncek.classpathless.api.IdentifiedBytecode;
 import io.github.mkoncek.classpathless.api.IdentifiedSource;
-import io.github.mkoncek.classpathless.api.InMemoryCompiler;
 import io.github.mkoncek.classpathless.api.MessagesListener;
 import io.github.mkoncek.classpathless.api.SourcePostprocessor;
 
 /**
  * An implementation using javax.tools compiler API
  */
-public class CompilerJavac implements InMemoryCompiler {
+public class CompilerJavac implements ClasspathlessCompiler {
     private JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     private InMemoryFileManager fileManager;
     private Arguments arguments;
@@ -77,10 +76,10 @@ public class CompilerJavac implements InMemoryCompiler {
             }
 
             if (listener != null) {
-                listener.addMessage(Level.SEVERE, MessageFormat.format("Compiler diagnostic at {5}[{0}, {1}]: {2}{3}(code: {4})",
+                listener.addMessage(Level.SEVERE, "Compiler diagnostic at {5}[{0}, {1}]: {2}{3}(code: {4})",
                         diagnostic.getLineNumber(), diagnostic.getColumnNumber(), msg,
                         System.lineSeparator(), diagnostic.getCode(),
-                        (source != null ? "(" + source.getName() + ") " : " ")));
+                        (source != null ? "(" + source.getName() + ") " : " "));
             }
         }
     }
@@ -95,7 +94,6 @@ public class CompilerJavac implements InMemoryCompiler {
         this(new Arguments().useHostJavaClasses(true));
     }
 
-    @Override
     public void setPostProcessor(SourcePostprocessor postprocessor) {
         if (postprocessor == null) {
             postprocessor = new SourcePostprocessor.Null();

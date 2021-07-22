@@ -15,8 +15,16 @@
  */
 package io.github.mkoncek.classpathless.impl;
 
-public class SourcePreprocessorImpl {
-    static String sanitizeImports(String source) {
+import io.github.mkoncek.classpathless.api.SourcePreprocessor;
+
+public abstract class SourcePreprocessorImpl implements SourcePreprocessor {
+    /**
+     * Fix import statements. Currently does:
+     * 1) {@code import a..b.c} -> {@code import a.$b$c;}
+     * @param source
+     * @return
+     */
+    public static String fixImports(String source) {
         var resultContent = new StringBuilder();
 
         for (var line : source.split("\\R")) {

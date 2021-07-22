@@ -15,16 +15,41 @@
  */
 package io.github.mkoncek.classpathless.impl;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 
 import io.github.mkoncek.classpathless.api.CompilationError;
-import io.github.mkoncek.classpathless.api.IdentifiedSource;
 import io.github.mkoncek.classpathless.api.SourcePostprocessor;
 
-public class SourcePostprocessorImpl implements SourcePostprocessor {
-    static String makeAbstract(String source, long lineNum, long columnNum) {
+public abstract class SourcePostprocessorImpl implements SourcePostprocessor {
+    /**
+     * Sort the errors backwards so that the source code fixes can be applied on
+     * the same file if possible.
+     * @param compilationErrors
+     * @return
+     */
+    public static Collection<CompilationError> sortBackwards(Collection<CompilationError> compilationErrors) {
+        var result = new ArrayList<>(compilationErrors);
+
+        result.sort((lhs, rhs) -> {
+            int cmp = Long.compare(rhs.lineNum, lhs.lineNum);
+            if (cmp == 0) {
+                cmp = Long.compare(rhs.columnNum, lhs.columnNum);
+            }
+            return cmp;
+        });
+
+        return result;
+    }
+
+    /**
+     * Add {@code abstract} keyword before the class at given coordinates.
+     * @param source
+     * @param lineNum
+     * @param columnNum
+     * @return
+     */
+    public static String makeAbstract(String source, long lineNum, long columnNum) {
         var result = new StringBuilder();
 
         for (var line : source.split("\\R")) {
@@ -37,32 +62,5 @@ public class SourcePostprocessorImpl implements SourcePostprocessor {
         }
 
         return result.toString();
-    }
-
-    @Override
-    public Result postprocess(IdentifiedSource source,
-            Collection<CompilationError> compilationErrors) {
-        var copy = new ArrayList<>(compilationErrors);
-
-        copy.sort((lhs, rhs) -> {
-            int result = Long.compare(rhs.lineNum, lhs.lineNum);
-            if (result == 0) {
-                result = Long.compare(rhs.columnNum, lhs.columnNum);
-            }
-            return result;
-        });
-
-        var result = new Result(source, false);
-
-
-        for (var ce : copy) {
-            if (ce.errorCode.equals("compiler.err.does.not.override.abstract")) {
-                var modifiedSource = makeAbstract(result.source.getSourceCode(), ce.lineNum, ce.columnNum);
-                result = new Result(new IdentifiedSource(result.source.getClassIdentifier(),
-                        modifiedSource.getBytes(StandardCharsets.UTF_8)), true);
-            }
-        }
-
-        return result;
     }
 }

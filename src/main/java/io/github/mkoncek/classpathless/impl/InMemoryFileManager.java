@@ -33,14 +33,14 @@ import javax.tools.JavaFileObject.Kind;
 import javax.tools.StandardLocation;
 
 import io.github.mkoncek.classpathless.api.ClassesProvider;
-import io.github.mkoncek.classpathless.api.InMemoryCompiler;
+import io.github.mkoncek.classpathless.api.ClasspathlessCompiler;
 
 /**
  * @author Marián Konček
  */
 public class InMemoryFileManager implements JavaFileManager {
     private JavaFileManager delegate;
-    private InMemoryCompiler.Arguments arguments = null;
+    private ClasspathlessCompiler.Arguments arguments = null;
 
     private ClassesProvider classprovider = null;
     private SortedSet<String> availableClasses = null;
@@ -65,7 +65,7 @@ public class InMemoryFileManager implements JavaFileManager {
         this.availableClasses = availableClasses;
     }
 
-    void setArguments(InMemoryCompiler.Arguments arguments) {
+    void setArguments(ClasspathlessCompiler.Arguments arguments) {
         this.arguments = arguments;
     }
 
