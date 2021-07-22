@@ -25,8 +25,8 @@ public abstract class SourcePostprocessorImpl implements SourcePostprocessor {
     /**
      * Sort the errors backwards so that the source code fixes can be applied on
      * the same file if possible.
-     * @param compilationErrors
-     * @return
+     * @param compilationErrors The collection of compilation errors.
+     * @return Sorted compilation errors.
      */
     public static Collection<CompilationError> sortBackwards(Collection<CompilationError> compilationErrors) {
         var result = new ArrayList<>(compilationErrors);
@@ -44,10 +44,10 @@ public abstract class SourcePostprocessorImpl implements SourcePostprocessor {
 
     /**
      * Add {@code abstract} keyword before the class at given coordinates.
-     * @param source
-     * @param lineNum
-     * @param columnNum
-     * @return
+     * @param source The source code.
+     * @param lineNum Line number.
+     * @param columnNum Column number.
+     * @return Resulting source code.
      */
     public static String makeAbstract(String source, long lineNum, long columnNum) {
         var result = new StringBuilder();
