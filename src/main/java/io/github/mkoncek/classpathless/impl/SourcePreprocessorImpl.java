@@ -20,9 +20,9 @@ import io.github.mkoncek.classpathless.api.SourcePreprocessor;
 public abstract class SourcePreprocessorImpl implements SourcePreprocessor {
     /**
      * Fix import statements. Currently does:
-     * 1) {@code import a..b.c} -> {@code import a.$b$c;}
-     * @param source
-     * @return
+     * 1) {@code import a..b.c} -&gt; {@code import a.$b$c;}
+     * @param source The source code.
+     * @return Resulting source code.
      */
     public static String fixImports(String source) {
         var resultContent = new StringBuilder();

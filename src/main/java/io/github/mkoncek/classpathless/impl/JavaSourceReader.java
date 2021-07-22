@@ -167,6 +167,7 @@ public class JavaSourceReader {
 
     /**
      * Read the package name.
+     * @param source The source code
      * @return Package name or null if none was found.
      * @throws IOException If an IO error occurs.
      */
